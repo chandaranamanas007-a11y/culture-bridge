@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background-color: #10122B;
+  color: #F5F1E8;
+  font-family: "Work Sans", sans-serif;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(242,169,59,0.10), transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(47,191,174,0.12), transparent 40%);
+  background-attachment: fixed;
+}
+
+.seam-rule {
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #F2A93B 0%, #F2A93B 48%, #2FBFAE 52%, #2FBFAE 100%);
+}
+
+.card {
+  background: #191B3A;
+  border: 1px solid rgba(245,241,232,0.08);
+  border-radius: 20px;
+}
+
+::selection {
+  background: #2FBFAE;
+  color: #10122B;
+}
+
+button:focus-visible, input:focus-visible, a:focus-visible {
+  outline: 2px solid #F2A93B;
+  outline-offset: 2px;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #10122B;
+}
+::-webkit-scrollbar-thumb {
+  background: #22254A;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8B8FB8;
+}
+
+html {
+  scroll-behavior: smooth;
+}
