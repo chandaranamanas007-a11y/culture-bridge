@@ -18,6 +18,8 @@ export default function Host() {
   const [creating, setCreating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState(20);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const roomRef = useRef(room);
   roomRef.current = room;
@@ -45,14 +47,21 @@ export default function Host() {
 
   const createRoom = useCallback(() => {
     if (creating) return;
+    setError("");
+    if (!password.trim()) {
+      setError("Please enter the host password.");
+      return;
+    }
     setCreating(true);
-    socket.emit("createRoom", (res) => {
+    socket.emit("createRoom", { password: password.trim() }, (res) => {
       if (res && res.code) {
         setCode(res.code);
+      } else if (res && res.error) {
+        setError(res.error);
       }
       setCreating(false);
     });
-  }, [creating]);
+  }, [creating, password]);
 
   const startGame = useCallback(() => {
     if (code) {
@@ -103,7 +112,7 @@ export default function Host() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-md"
+          className="max-w-md w-full"
         >
           <p className="font-mono text-xs tracking-[0.3em] text-lagoon uppercase mb-4">
             Host console
@@ -115,13 +124,34 @@ export default function Host() {
             This creates a room others can join with a 4-letter code. Share
             your screen so the group can follow along together.
           </p>
-          <button
-            onClick={createRoom}
-            disabled={creating}
-            className="bg-saffron text-night font-bold px-8 py-4 rounded-2xl hover:bg-saffron2 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-saffron/20 disabled:opacity-60 disabled:hover:scale-100"
-          >
-            {creating ? "Creating…" : "Create Room"}
-          </button>
+          
+          <div className="card p-6 flex flex-col gap-4 text-left max-w-sm mx-auto shadow-xl mb-6">
+            <div>
+              <label className="text-xs text-muted uppercase tracking-widest font-semibold ml-1">
+                Host Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password to host..."
+                className="w-full mt-2 bg-surface2 border-2 border-white/10 rounded-xl px-4 py-3 text-lg focus:border-saffron focus:bg-surface outline-none transition-all placeholder:text-white/20"
+              />
+            </div>
+            {error && (
+              <p className="text-red-400 text-sm font-medium bg-red-400/10 p-3 rounded-lg border border-red-400/20">
+                {error}
+              </p>
+            )}
+            <button
+              onClick={createRoom}
+              disabled={creating}
+              className="bg-saffron text-night font-bold py-4 rounded-xl hover:bg-saffron2 hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-saffron/20 disabled:opacity-60"
+            >
+              {creating ? "Creating…" : "Create Room"}
+            </button>
+          </div>
+
           <div className="mt-8">
             <Link to="/" className="text-muted text-sm hover:text-cream transition-colors underline underline-offset-4">
               Back to Home

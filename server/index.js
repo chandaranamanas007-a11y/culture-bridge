@@ -28,12 +28,18 @@ const rooms = {};
 
 const QUESTION_TIME_LIMIT = 20; // seconds
 
+const HOST_PASSWORD = process.env.HOST_PASSWORD || 'interact2026';
+
 io.on('connection', (socket) => {
   console.log('✓ Client connected:', socket.id);
 
   /* ─── HOST: Create room ─── */
-  socket.on('createRoom', (callback) => {
+  socket.on('createRoom', ({ password }, callback) => {
     try {
+      if (password !== HOST_PASSWORD) {
+        callback({ error: 'Incorrect host password!' });
+        return;
+      }
       const code = makeCode();
       rooms[code] = {
         status: 'lobby',
