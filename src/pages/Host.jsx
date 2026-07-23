@@ -192,7 +192,7 @@ export default function Host() {
               exit={{ opacity: 0, scale: 1.05 }}
               className="card p-8 sm:p-12 text-center shadow-2xl"
             >
-              <p className="text-muted font-mono uppercase tracking-widest text-sm mb-2">Join at <span className="text-lagoon font-bold">localhost:5173/play</span></p>
+              <p className="text-muted font-mono uppercase tracking-widest text-sm mb-2">Join at <span className="text-lagoon font-bold">{window.location.host}/play</span></p>
               <p className="font-mono text-7xl sm:text-9xl font-bold tracking-[0.1em] my-6 text-cream drop-shadow-md">
                 {code}
               </p>
