@@ -12,4 +12,4 @@ const socket = io(SERVER_URL, {
   reconnectionDelay: 1000,
 });
 
-export { socket };
+export { socket, SERVER_URL };

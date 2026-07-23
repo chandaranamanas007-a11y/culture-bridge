@@ -35,6 +35,23 @@ export default function Host() {
   }, []);
 
   useEffect(() => {
+    const savedCode = localStorage.getItem("hostCode");
+    const savedPassword = localStorage.getItem("hostPassword");
+    if (savedCode && savedPassword) {
+      setPassword(savedPassword);
+      socket.emit("rejoinHost", { code: savedCode, password: savedPassword }, (res) => {
+        if (res && res.room) {
+          setCode(savedCode);
+          setRoom(res.room);
+        } else {
+          localStorage.removeItem("hostCode");
+          localStorage.removeItem("hostPassword");
+        }
+      });
+    }
+  }, []);
+
+  useEffect(() => {
     if (room?.status === "question" && room?.questionStartedAt) {
       const interval = setInterval(() => {
         const elapsed = (Date.now() - room.questionStartedAt) / 1000;
@@ -56,6 +73,8 @@ export default function Host() {
     socket.emit("createRoom", { password: password.trim() }, (res) => {
       if (res && res.code) {
         setCode(res.code);
+        localStorage.setItem("hostCode", res.code);
+        localStorage.setItem("hostPassword", password.trim());
       } else if (res && res.error) {
         setError(res.error);
       }
@@ -96,6 +115,24 @@ export default function Host() {
       socket.emit("restartGame", code);
     }
   }, [code]);
+
+  useEffect(() => {
+    const handleTimeUp = ({ questionIndex }) => {
+      const currentRoom = roomRef.current;
+      if (currentRoom && currentRoom.status === "question" && currentRoom.currentQuestion === questionIndex) {
+        revealAnswer();
+      }
+    };
+    socket.on("timeUp", handleTimeUp);
+    return () => {
+      socket.off("timeUp", handleTimeUp);
+    };
+  }, [revealAnswer]);
+
+  const handleExit = () => {
+    localStorage.removeItem("hostCode");
+    localStorage.removeItem("hostPassword");
+  };
 
   const handleCopyCode = () => {
     if (code) {
@@ -520,6 +557,7 @@ export default function Host() {
                 </button>
                 <Link
                   to="/"
+                  onClick={handleExit}
                   className="bg-surface2 text-cream px-8 py-4 rounded-xl hover:bg-surface transition-colors border border-white/10 font-medium"
                 >
                   Exit to Home

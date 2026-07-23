@@ -5,6 +5,7 @@ import cors from 'cors';
 
 const app = express();
 app.use(cors());
+app.get('/ping', (req, res) => res.send('pong'));
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
@@ -47,9 +48,11 @@ io.on('connection', (socket) => {
         players: {},
         answers: {},
         createdAt: Date.now(),
+        lastActiveAt: Date.now(),
         hostSocketId: socket.id,
         questionStartedAt: null,
         timeLimit: QUESTION_TIME_LIMIT,
+        timeoutId: null,
       };
       socket.join(code);
       socket.data = { ...(socket.data || {}), roomCode: code, role: 'host' };
@@ -62,10 +65,36 @@ io.on('connection', (socket) => {
     }
   });
 
+  /* ─── HOST: Rejoin room ─── */
+  socket.on('rejoinHost', ({ code, password }, callback) => {
+    try {
+      const roomCode = (code || '').toUpperCase();
+      const room = rooms[roomCode];
+      if (!room) {
+        callback({ error: 'Room not found.' });
+        return;
+      }
+      if (password !== HOST_PASSWORD) {
+        callback({ error: 'Incorrect host password!' });
+        return;
+      }
+      room.hostSocketId = socket.id;
+      socket.join(roomCode);
+      socket.data = { ...(socket.data || {}), roomCode, role: 'host' };
+      callback({ success: true, room });
+      io.to(roomCode).emit('roomUpdated', room);
+      console.log(`✓ Host rejoined room: ${roomCode}`);
+    } catch (err) {
+      console.error('✗ Error rejoining host room:', err);
+      callback({ error: 'Failed to rejoin room' });
+    }
+  });
+
   /* ─── HOST: Start game ─── */
   socket.on('startGame', (code) => {
     const room = rooms[code];
     if (!room) return;
+    room.lastActiveAt = Date.now();
     room.status = 'question';
     room.currentQuestion = 0;
     room.questionStartedAt = Date.now();
@@ -80,6 +109,12 @@ io.on('connection', (socket) => {
   socket.on('revealAnswer', ({ code, correctIndex }) => {
     const room = rooms[code];
     if (!room || room.status !== 'question') return;
+    room.lastActiveAt = Date.now();
+    
+    if (room.timeoutId) {
+      clearTimeout(room.timeoutId);
+      room.timeoutId = null;
+    }
     
     const qIndex = room.currentQuestion;
     const answersForQ = room.answers[qIndex] || {};
@@ -118,6 +153,12 @@ io.on('connection', (socket) => {
   socket.on('restartGame', (code) => {
     const room = rooms[code];
     if (!room) return;
+    room.lastActiveAt = Date.now();
+
+    if (room.timeoutId) {
+      clearTimeout(room.timeoutId);
+      room.timeoutId = null;
+    }
     room.status = 'lobby';
     room.currentQuestion = 0;
     room.answers = {};
@@ -135,6 +176,12 @@ io.on('connection', (socket) => {
   socket.on('nextQuestion', ({ code, nextIndex, isEnd }) => {
     const room = rooms[code];
     if (!room) return;
+    room.lastActiveAt = Date.now();
+
+    if (room.timeoutId) {
+      clearTimeout(room.timeoutId);
+      room.timeoutId = null;
+    }
     if (isEnd) {
       room.status = 'ended';
       room.questionStartedAt = null;
@@ -164,6 +211,8 @@ io.on('connection', (socket) => {
         return;
       }
 
+      rooms[roomCode].lastActiveAt = Date.now();
+
       rooms[roomCode].players[playerId] = {
         name,
         country,
@@ -192,6 +241,7 @@ io.on('connection', (socket) => {
   socket.on('submitAnswer', ({ code, playerId, questionIndex, answerIndex }) => {
     const room = rooms[code];
     if (!room) return;
+    room.lastActiveAt = Date.now();
     if (room.status !== 'question') return;
     if (room.currentQuestion !== questionIndex) return;
 
@@ -218,18 +268,39 @@ io.on('connection', (socket) => {
 
 /* ─── Auto-reveal timer ─── */
 function scheduleAutoReveal(code, questionIndex) {
-  setTimeout(() => {
-    const room = rooms[code];
-    if (!room) return;
-    if (room.status !== 'question') return;
-    if (room.currentQuestion !== questionIndex) return;
+  const room = rooms[code];
+  if (!room) return;
+  if (room.timeoutId) {
+    clearTimeout(room.timeoutId);
+  }
+  room.timeoutId = setTimeout(() => {
+    const r = rooms[code];
+    if (!r) return;
+    if (r.status !== 'question') return;
+    if (r.currentQuestion !== questionIndex) return;
     // Time's up — emit a timeUp event so host auto-reveals
     io.to(code).emit('timeUp', { questionIndex });
     console.log(`⏱ Time's up for Q${questionIndex + 1} in room ${code}`);
-  }, (QUESTION_TIME_LIMIT + 1) * 1000); // +1s grace
+  }, (room.timeLimit + 1) * 1000); // +1s grace
 }
 
 const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () => {
   console.log(`\n🚀 Culture Bridge server running on port ${PORT}\n`);
 });
+
+// Cleanup idle rooms every hour
+setInterval(() => {
+  const now = Date.now();
+  Object.keys(rooms).forEach((code) => {
+    const room = rooms[code];
+    // Delete rooms that haven't been active for 6 hours
+    if (now - room.lastActiveAt > 6 * 60 * 60 * 1000) {
+      if (room.timeoutId) {
+        clearTimeout(room.timeoutId);
+      }
+      delete rooms[code];
+      console.log(`🧹 Cleaned up idle room: ${code}`);
+    }
+  });
+}, 60 * 60 * 1000); // check hourly

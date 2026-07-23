@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { socket } from "../socket.js";
+import { socket, SERVER_URL } from "../socket.js";
 import { questions } from "../data/questions.js";
 import { Link } from "react-router-dom";
 import confetti from "canvas-confetti";
@@ -17,13 +17,20 @@ function makePlayerId() {
 }
 
 export default function Play() {
-  const [code, setCode] = useState("");
-  const [name, setName] = useState("");
-  const [country, setCountry] = useState("India");
+  const [code, setCode] = useState(() => localStorage.getItem("playerRoomCode") || "");
+  const [name, setName] = useState(() => localStorage.getItem("playerName") || "");
+  const [country, setCountry] = useState(() => localStorage.getItem("playerCountry") || "India");
   const [joined, setJoined] = useState(false);
   const [error, setError] = useState("");
   const [room, setRoom] = useState(null);
-  const [playerId] = useState(() => makePlayerId());
+  const [playerId] = useState(() => {
+    let pid = localStorage.getItem("playerId");
+    if (!pid) {
+      pid = makePlayerId();
+      localStorage.setItem("playerId", pid);
+    }
+    return pid;
+  });
   const [selected, setSelected] = useState(null);
   const [answeredIndex, setAnsweredIndex] = useState(null);
   const [timeLeft, setTimeLeft] = useState(20);
@@ -38,6 +45,34 @@ export default function Play() {
     socket.on("roomUpdated", handler);
     return () => socket.off("roomUpdated", handler);
   }, []);
+
+  // Wake up Render backend
+  useEffect(() => {
+    fetch(`${SERVER_URL}/ping`).catch((err) => console.log("Wake-up ping error:", err));
+  }, []);
+
+  // Auto rejoin if active session exists
+  useEffect(() => {
+    const savedCode = localStorage.getItem("playerRoomCode");
+    const savedName = localStorage.getItem("playerName");
+    const savedCountry = localStorage.getItem("playerCountry");
+
+    if (savedCode && savedName && savedCountry) {
+      socket.emit(
+        "joinRoom",
+        { code: savedCode, name: savedName, country: savedCountry, playerId },
+        (res) => {
+          if (res.error) {
+            localStorage.removeItem("playerRoomCode");
+          } else {
+            setCode(savedCode);
+            setJoined(true);
+            setRoom(res.room);
+          }
+        }
+      );
+    }
+  }, [playerId]);
 
   // Timer
   useEffect(() => {
@@ -114,6 +149,9 @@ export default function Play() {
             setError(res.error);
           } else {
             setCode(roomCode);
+            localStorage.setItem("playerRoomCode", roomCode);
+            localStorage.setItem("playerName", name.trim());
+            localStorage.setItem("playerCountry", country);
             setJoined(true);
             setRoom(res.room);
           }
@@ -122,6 +160,12 @@ export default function Play() {
     },
     [code, name, country, playerId]
   );
+
+  const handleExit = () => {
+    localStorage.removeItem("playerRoomCode");
+    setJoined(false);
+    setRoom(null);
+  };
 
   const submitAnswer = useCallback(
     (i) => {
@@ -459,6 +503,7 @@ export default function Play() {
         
         <Link
           to="/"
+          onClick={handleExit}
           className="mt-12 bg-surface2 text-cream px-8 py-4 rounded-xl hover:bg-surface transition-colors border border-white/10 font-medium"
         >
           Exit to Home
