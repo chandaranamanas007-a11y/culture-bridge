@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { socket } from "../socket.js";
-import { questions } from "../data/questions.js";
 import { Link } from "react-router-dom";
 import { Copy, Check, Users, Trophy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,6 +19,11 @@ export default function Host() {
   const [timeLeft, setTimeLeft] = useState(20);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  // Quiz Pools Selection
+  const [includeDefault, setIncludeDefault] = useState(true);
+  const [includeMauritius, setIncludeMauritius] = useState(true);
+  const [includeTgsWadi, setIncludeTgsWadi] = useState(true);
 
   const roomRef = useRef(room);
   roomRef.current = room;
@@ -70,7 +74,12 @@ export default function Host() {
       return;
     }
     setCreating(true);
-    socket.emit("createRoom", { password: password.trim() }, (res) => {
+    const questionPools = {
+      default: includeDefault,
+      mauritius: includeMauritius,
+      tgswadi: includeTgsWadi,
+    };
+    socket.emit("createRoom", { password: password.trim(), questionPools }, (res) => {
       if (res && res.code) {
         setCode(res.code);
         localStorage.setItem("hostCode", res.code);
@@ -80,7 +89,7 @@ export default function Host() {
       }
       setCreating(false);
     });
-  }, [creating, password]);
+  }, [creating, password, includeDefault, includeMauritius, includeTgsWadi]);
 
   const startGame = useCallback(() => {
     if (code) {
@@ -91,7 +100,7 @@ export default function Host() {
   const revealAnswer = useCallback(() => {
     const currentRoom = roomRef.current;
     if (!currentRoom || !code) return;
-    const q = questions[currentRoom.currentQuestion];
+    const q = currentRoom.questions?.[currentRoom.currentQuestion];
     if (!q) return;
     socket.emit("revealAnswer", {
       code,
@@ -106,7 +115,7 @@ export default function Host() {
     socket.emit("nextQuestion", {
       code,
       nextIndex: next,
-      isEnd: next >= questions.length,
+      isEnd: next >= (currentRoom.questions?.length || 0),
     });
   }, [code]);
 
@@ -175,6 +184,43 @@ export default function Host() {
                 className="w-full mt-2 bg-surface2 border-2 border-white/10 rounded-xl px-4 py-3 text-lg focus:border-saffron focus:bg-surface outline-none transition-all placeholder:text-white/20"
               />
             </div>
+
+            {/* Question Pools Selection */}
+            <div className="flex flex-col gap-2 mt-2">
+              <label className="text-xs text-muted uppercase tracking-widest font-semibold ml-1">
+                Quiz Question Pools
+              </label>
+              <div className="flex flex-col gap-2.5 bg-surface2/50 p-4 rounded-xl border border-white/5">
+                <label className="flex items-center gap-3 text-sm cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={includeDefault}
+                    onChange={(e) => setIncludeDefault(e.target.checked)}
+                    className="accent-saffron w-4 h-4 cursor-pointer"
+                  />
+                  <span>Default Quiz (16 Questions)</span>
+                </label>
+                <label className="flex items-center gap-3 text-sm cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={includeMauritius}
+                    onChange={(e) => setIncludeMauritius(e.target.checked)}
+                    className="accent-saffron w-4 h-4 cursor-pointer"
+                  />
+                  <span>Mauritius Custom Questions</span>
+                </label>
+                <label className="flex items-center gap-3 text-sm cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={includeTgsWadi}
+                    onChange={(e) => setIncludeTgsWadi(e.target.checked)}
+                    className="accent-saffron w-4 h-4 cursor-pointer"
+                  />
+                  <span>TGS Wadi Custom Questions</span>
+                </label>
+              </div>
+            </div>
+
             {error && (
               <p className="text-red-400 text-sm font-medium bg-red-400/10 p-3 rounded-lg border border-red-400/20">
                 {error}
@@ -217,7 +263,7 @@ export default function Host() {
     ...p,
   }));
   const ranked = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
-  const q = questions[room.currentQuestion];
+  const q = room.questions?.[room.currentQuestion];
   const answersForQ = room.answers?.[room.currentQuestion] || {};
   const answeredCount = Object.keys(answersForQ).length;
   
@@ -296,7 +342,7 @@ export default function Host() {
                 disabled={players.length === 0}
                 className="bg-lagoon text-night font-bold text-lg px-10 py-5 rounded-2xl hover:bg-lagoon2 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-lagoon/20 disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed"
               >
-                Start Game ({questions.length} Questions)
+                Start Game ({room.questions?.length || 0} Questions)
               </button>
             </motion.div>
           )}
@@ -323,7 +369,7 @@ export default function Host() {
               <div className="p-8 sm:p-10">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                   <span className="font-mono text-xs uppercase tracking-widest text-muted bg-surface2 px-3 py-1.5 rounded-full inline-block w-max">
-                    Question {room.currentQuestion + 1} / {questions.length}
+                    Question {room.currentQuestion + 1} / {room.questions?.length || 0}
                   </span>
                   <div className="flex items-center gap-3">
                     <span className="text-xl font-mono font-bold w-12 text-right">
@@ -441,7 +487,7 @@ export default function Host() {
                     onClick={nextQuestion}
                     className="bg-lagoon text-night font-bold px-8 py-4 rounded-xl hover:bg-lagoon2 hover:scale-105 active:scale-95 transition-all shadow-lg text-lg flex items-center gap-2"
                   >
-                    {room.currentQuestion + 1 >= questions.length
+                    {room.currentQuestion + 1 >= (room.questions?.length || 0)
                       ? "See Podium & Results"
                       : "Next Question"}
                     <span className="text-2xl">→</span>

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { socket, SERVER_URL } from "../socket.js";
-import { questions } from "../data/questions.js";
 import { Link } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
@@ -89,7 +88,7 @@ export default function Play() {
   // Handle Confetti for correct answers and end of game
   useEffect(() => {
     if (room?.status === "reveal" && prevStatusRef.current === "question") {
-      const q = questions[room.currentQuestion];
+      const q = room.questions?.[room.currentQuestion];
       if (answeredIndex === q?.correct) {
         confetti({
           particleCount: 100,
@@ -324,7 +323,7 @@ export default function Play() {
     );
   }
 
-  const q = questions[room.currentQuestion];
+  const q = room.questions?.[room.currentQuestion];
 
   /* ── Answering a question ──────────────────── */
   if (room.status === "question" && q) {

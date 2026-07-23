@@ -2,6 +2,13 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { questions as defaultQuestions } from './default_questions.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors());
@@ -31,16 +38,65 @@ const QUESTION_TIME_LIMIT = 20; // seconds
 
 const HOST_PASSWORD = process.env.HOST_PASSWORD || 'interact2026';
 
+const CUSTOM_QUESTIONS_PATH = path.join(__dirname, 'custom_questions.json');
+let customQuestions = { mauritius: [], tgswadi: [] };
+
+function loadCustomQuestions() {
+  try {
+    if (fs.existsSync(CUSTOM_QUESTIONS_PATH)) {
+      const data = fs.readFileSync(CUSTOM_QUESTIONS_PATH, 'utf8');
+      customQuestions = JSON.parse(data);
+      if (!customQuestions.mauritius) customQuestions.mauritius = [];
+      if (!customQuestions.tgswadi) customQuestions.tgswadi = [];
+    }
+  } catch (err) {
+    console.error('Error loading custom questions:', err);
+  }
+}
+
+function saveCustomQuestions() {
+  try {
+    fs.writeFileSync(CUSTOM_QUESTIONS_PATH, JSON.stringify(customQuestions, null, 2), 'utf8');
+  } catch (err) {
+    console.error('Error saving custom questions:', err);
+  }
+}
+
+loadCustomQuestions();
+
+const MAURITIUS_ADMIN_PASSWORD = process.env.MAURITIUS_ADMIN_PASSWORD || 'mauritius2026';
+const TGSWADI_ADMIN_PASSWORD = process.env.TGSWADI_ADMIN_PASSWORD || 'tgswadi2026';
+
 io.on('connection', (socket) => {
   console.log('✓ Client connected:', socket.id);
 
   /* ─── HOST: Create room ─── */
-  socket.on('createRoom', ({ password }, callback) => {
+  socket.on('createRoom', ({ password, questionPools }, callback) => {
     try {
       if (password !== HOST_PASSWORD) {
         callback({ error: 'Incorrect host password!' });
         return;
       }
+
+      // Compile room questions based on selected pools
+      let roomQuestions = [];
+      const pools = questionPools || { default: true, mauritius: true, tgswadi: true };
+      
+      if (pools.default) {
+        roomQuestions = [...roomQuestions, ...defaultQuestions];
+      }
+      if (pools.mauritius && customQuestions.mauritius) {
+        roomQuestions = [...roomQuestions, ...customQuestions.mauritius];
+      }
+      if (pools.tgswadi && customQuestions.tgswadi) {
+        roomQuestions = [...roomQuestions, ...customQuestions.tgswadi];
+      }
+      
+      // Fallback if no pools selected
+      if (roomQuestions.length === 0) {
+        roomQuestions = [...defaultQuestions];
+      }
+
       const code = makeCode();
       rooms[code] = {
         status: 'lobby',
@@ -53,6 +109,7 @@ io.on('connection', (socket) => {
         questionStartedAt: null,
         timeLimit: QUESTION_TIME_LIMIT,
         timeoutId: null,
+        questions: roomQuestions,
       };
       socket.join(code);
       socket.data = { ...(socket.data || {}), roomCode: code, role: 'host' };
@@ -258,6 +315,44 @@ io.on('connection', (socket) => {
     console.log(
       `✓ Player ${playerId} answered Q${questionIndex + 1} with option ${String.fromCharCode(65 + answerIndex)} in room ${code}`
     );
+  });
+
+  /* ─── ADMIN: Get Custom Questions ─── */
+  socket.on('getCustomQuestions', (callback) => {
+    callback(customQuestions);
+  });
+
+  /* ─── ADMIN: Add Custom Question ─── */
+  socket.on('addCustomQuestion', ({ club, password, question }, callback) => {
+    const expectedPassword = club === 'mauritius' ? MAURITIUS_ADMIN_PASSWORD : TGSWADI_ADMIN_PASSWORD;
+    if (password !== expectedPassword) {
+      callback({ error: 'Incorrect admin password!' });
+      return;
+    }
+    if (!customQuestions[club]) {
+      customQuestions[club] = [];
+    }
+    customQuestions[club].push(question);
+    saveCustomQuestions();
+    callback({ success: true, customQuestions });
+    console.log(`✓ Custom question added for ${club}`);
+  });
+
+  /* ─── ADMIN: Delete Custom Question ─── */
+  socket.on('deleteCustomQuestion', ({ club, password, index }, callback) => {
+    const expectedPassword = club === 'mauritius' ? MAURITIUS_ADMIN_PASSWORD : TGSWADI_ADMIN_PASSWORD;
+    if (password !== expectedPassword) {
+      callback({ error: 'Incorrect admin password!' });
+      return;
+    }
+    if (customQuestions[club] && customQuestions[club][index] !== undefined) {
+      customQuestions[club].splice(index, 1);
+      saveCustomQuestions();
+      callback({ success: true, customQuestions });
+      console.log(`✓ Custom question deleted for ${club} at index ${index}`);
+    } else {
+      callback({ error: 'Question index invalid' });
+    }
   });
 
   /* ─── DISCONNECT ─── */
