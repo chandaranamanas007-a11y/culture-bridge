@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { socket, SERVER_URL } from "../socket.js";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -16,6 +16,7 @@ function makePlayerId() {
 }
 
 export default function Play() {
+  const navigate = useNavigate();
   const [code, setCode] = useState(() => localStorage.getItem("playerRoomCode") || "");
   const [name, setName] = useState(() => localStorage.getItem("playerName") || "");
   const [country, setCountry] = useState(() => localStorage.getItem("playerCountry") || "India");

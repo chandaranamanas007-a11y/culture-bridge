@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { socket } from "../socket.js";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Copy, Check, Users, Trophy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -12,12 +12,20 @@ const OPTION_COLORS = [
 ];
 
 export default function Host() {
+  const navigate = useNavigate();
+  const token = localStorage.getItem("staffToken");
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/login");
+    }
+  }, [token, navigate]);
+
   const [code, setCode] = useState(null);
   const [room, setRoom] = useState(null);
   const [creating, setCreating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState(20);
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   // Quiz Pools Selection
@@ -40,20 +48,17 @@ export default function Host() {
 
   useEffect(() => {
     const savedCode = localStorage.getItem("hostCode");
-    const savedPassword = localStorage.getItem("hostPassword");
-    if (savedCode && savedPassword) {
-      setPassword(savedPassword);
-      socket.emit("rejoinHost", { code: savedCode, password: savedPassword }, (res) => {
+    if (savedCode && token) {
+      socket.emit("rejoinHost", { code: savedCode, token }, (res) => {
         if (res && res.room) {
           setCode(savedCode);
           setRoom(res.room);
         } else {
           localStorage.removeItem("hostCode");
-          localStorage.removeItem("hostPassword");
         }
       });
     }
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     if (room?.status === "question" && room?.questionStartedAt) {
@@ -69,27 +74,26 @@ export default function Host() {
   const createRoom = useCallback(() => {
     if (creating) return;
     setError("");
-    if (!password.trim()) {
-      setError("Please enter the host password.");
-      return;
-    }
     setCreating(true);
     const questionPools = {
       default: includeDefault,
       mauritius: includeMauritius,
       tgswadi: includeTgsWadi,
     };
-    socket.emit("createRoom", { password: password.trim(), questionPools }, (res) => {
+    socket.emit("createRoom", { token, questionPools }, (res) => {
       if (res && res.code) {
         setCode(res.code);
         localStorage.setItem("hostCode", res.code);
-        localStorage.setItem("hostPassword", password.trim());
       } else if (res && res.error) {
         setError(res.error);
+        if (res.error.includes("Unauthorized")) {
+          localStorage.clear();
+          navigate("/login");
+        }
       }
       setCreating(false);
     });
-  }, [creating, password, includeDefault, includeMauritius, includeTgsWadi]);
+  }, [creating, token, includeDefault, includeMauritius, includeTgsWadi, navigate]);
 
   const startGame = useCallback(() => {
     if (code) {
@@ -138,9 +142,21 @@ export default function Host() {
     };
   }, [revealAnswer]);
 
+  useEffect(() => {
+    const handleTerminated = ({ reason }) => {
+      localStorage.removeItem("hostCode");
+      localStorage.removeItem("hostPassword");
+      alert(`Room terminated by admin: ${reason || "Room has been shut down."}`);
+      navigate("/");
+    };
+    socket.on("roomTerminated", handleTerminated);
+    return () => {
+      socket.off("roomTerminated", handleTerminated);
+    };
+  }, [navigate]);
+
   const handleExit = () => {
     localStorage.removeItem("hostCode");
-    localStorage.removeItem("hostPassword");
   };
 
   const handleCopyCode = () => {
@@ -172,18 +188,6 @@ export default function Host() {
           </p>
           
           <div className="card p-6 flex flex-col gap-4 text-left max-w-sm mx-auto shadow-xl mb-6">
-            <div>
-              <label className="text-xs text-muted uppercase tracking-widest font-semibold ml-1">
-                Host Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password to host..."
-                className="w-full mt-2 bg-surface2 border-2 border-white/10 rounded-xl px-4 py-3 text-lg focus:border-saffron focus:bg-surface outline-none transition-all placeholder:text-white/20"
-              />
-            </div>
 
             {/* Question Pools Selection */}
             <div className="flex flex-col gap-2 mt-2">

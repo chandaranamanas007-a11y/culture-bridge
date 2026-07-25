@@ -1,25 +1,31 @@
 import { useEffect, useState, useCallback } from "react";
 import { socket } from "../socket.js";
-import { Link } from "react-router-dom";
-import { Trash2, Plus, Lock, Unlock, AlertTriangle, ArrowLeft, HelpCircle } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Trash2, Plus, ArrowLeft, HelpCircle, Edit2, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function Admin({ club }) {
-  const clubDisplayName = club === "mauritius" ? "Mauritius Club" : "TGS Wadi Club";
-  
-  // Session storage keys
-  const tokenKey = `admin_token_${club}`;
-  
-  const [password, setPassword] = useState("");
-  const [unlocked, setUnlocked] = useState(() => !!sessionStorage.getItem(tokenKey));
+export default function Admin() {
+  const navigate = useNavigate();
+  const token = localStorage.getItem("staffToken");
+  const role = localStorage.getItem("staffRole");
+
+  useEffect(() => {
+    if (!token || role !== "admin") {
+      navigate("/login");
+    }
+  }, [token, role, navigate]);
+
+  const [club, setClub] = useState("default");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [questionsList, setQuestionsList] = useState([]);
+  const [allQuestions, setAllQuestions] = useState({});
+  const [editIndex, setEditIndex] = useState(null);
 
   // Form State
   const [format, setFormat] = useState("Trivia");
-  const [country, setCountry] = useState(club === "mauritius" ? "Mauritius" : "India");
+  const [country, setCountry] = useState("Both");
   const [prompt, setPrompt] = useState("");
   const [optionA, setOptionA] = useState("");
   const [optionB, setOptionB] = useState("");
@@ -30,56 +36,32 @@ export default function Admin({ club }) {
 
   const fetchQuestions = useCallback(() => {
     setLoading(true);
-    socket.emit("getCustomQuestions", (res) => {
-      if (res && res[club]) {
-        setQuestionsList(res[club]);
-      }
+    socket.emit("getCustomQuestions", { token }, (res) => {
       setLoading(false);
+      if (res && res.error) {
+        setError(res.error);
+        if (res.error.includes("Unauthorized")) {
+          localStorage.clear();
+          navigate("/login");
+        }
+      } else if (res) {
+        setAllQuestions(res);
+        setQuestionsList(res[club] || []);
+      }
     });
-  }, [club]);
+  }, [token, club, navigate]);
 
-  // Load questions if already unlocked on mount
   useEffect(() => {
-    if (unlocked) {
+    if (token) {
       fetchQuestions();
     }
-  }, [unlocked, fetchQuestions]);
+  }, [fetchQuestions, token]);
 
-  const handleUnlock = (e) => {
-    e.preventDefault();
-    setError("");
-    if (!password.trim()) {
-      setError("Please enter the password.");
-      return;
-    }
+  useEffect(() => {
+    setQuestionsList(allQuestions[club] || []);
+  }, [club, allQuestions]);
 
-    setLoading(true);
-    // Send a dummy request to check password
-    socket.emit("getCustomQuestions", (res) => {
-      // Check auth using addCustomQuestion with a dry-run flag, or just try to retrieve questions.
-      // Wait, getCustomQuestions doesn't take a password. Let's send a delete check or a dummy question add
-      // with a wrong index to check the password, OR we can just try to fetch.
-      // Actually, let's verify password by doing a quick test action or verify it against the server.
-      // Wait, let's just make a verification attempt by calling addCustomQuestion with an empty object to check auth
-      socket.emit("addCustomQuestion", { club, password: password.trim(), question: null }, (res) => {
-        setLoading(false);
-        if (res && res.error && res.error === "Incorrect admin password!") {
-          setError("Incorrect password! Access denied.");
-        } else {
-          // Password verified
-          setUnlocked(true);
-          sessionStorage.setItem(tokenKey, password.trim());
-          if (res && res.customQuestions) {
-            setQuestionsList(res.customQuestions[club] || []);
-          } else {
-            fetchQuestions();
-          }
-        }
-      });
-    });
-  };
-
-  const handleAddQuestion = (e) => {
+  const handleSaveQuestion = (e) => {
     e.preventDefault();
     setError("");
 
@@ -88,7 +70,6 @@ export default function Admin({ club }) {
       return;
     }
 
-    const savedPassword = sessionStorage.getItem(tokenKey) || password;
     const newQuestion = {
       format,
       country,
@@ -99,7 +80,12 @@ export default function Admin({ club }) {
     };
 
     setSubmitting(true);
-    socket.emit("addCustomQuestion", { club, password: savedPassword, question: newQuestion }, (res) => {
+    const eventName = editIndex !== null ? "editCustomQuestion" : "addCustomQuestion";
+    const payload = editIndex !== null 
+      ? { token, club, index: editIndex, question: newQuestion }
+      : { token, club, question: newQuestion };
+
+    socket.emit(eventName, payload, (res) => {
       setSubmitting(false);
       if (res && res.error) {
         setError(res.error);
@@ -112,12 +98,43 @@ export default function Admin({ club }) {
         setOptionD("");
         setCorrectIndex(0);
         setExplain("");
+        setEditIndex(null);
         
         if (res && res.customQuestions) {
+          setAllQuestions(res.customQuestions);
           setQuestionsList(res.customQuestions[club] || []);
         }
       }
     });
+  };
+
+  const handleEditClick = (index) => {
+    const q = questionsList[index];
+    if (!q) return;
+    setFormat(q.format || "Trivia");
+    setCountry(q.country || "Both");
+    setPrompt(q.prompt || "");
+    setOptionA(q.options?.[0] || "");
+    setOptionB(q.options?.[1] || "");
+    setOptionC(q.options?.[2] || "");
+    setOptionD(q.options?.[3] || "");
+    setCorrectIndex(q.correct || 0);
+    setExplain(q.explain || "");
+    setEditIndex(index);
+    setError("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleCancelEdit = () => {
+    setPrompt("");
+    setOptionA("");
+    setOptionB("");
+    setOptionC("");
+    setOptionD("");
+    setCorrectIndex(0);
+    setExplain("");
+    setEditIndex(null);
+    setError("");
   };
 
   const handleDeleteQuestion = (index) => {
@@ -125,140 +142,74 @@ export default function Admin({ club }) {
       return;
     }
 
-    const savedPassword = sessionStorage.getItem(tokenKey) || password;
-    socket.emit("deleteCustomQuestion", { club, password: savedPassword, index }, (res) => {
+    socket.emit("deleteCustomQuestion", { token, club, index }, (res) => {
       if (res && res.error) {
         alert(res.error);
       } else if (res && res.customQuestions) {
+        setAllQuestions(res.customQuestions);
         setQuestionsList(res.customQuestions[club] || []);
       }
     });
   };
 
-  const handleLogout = () => {
-    sessionStorage.removeItem(tokenKey);
-    setUnlocked(false);
-    setPassword("");
-    setQuestionsList([]);
-  };
-
-  /* ── PASS LOCK SCREEN ─────────────────────── */
-  if (!unlocked) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-md w-full"
-        >
-          <div className="w-16 h-16 bg-surface2 rounded-2xl mx-auto mb-6 flex items-center justify-center text-saffron border border-white/5 shadow-lg">
-            <Lock size={28} />
-          </div>
-          <p className="font-mono text-xs tracking-[0.3em] text-lagoon uppercase mb-3">
-            Organizers Panel
-          </p>
-          <h1 className="font-display text-4xl font-semibold mb-6">
-            Unlock {clubDisplayName} Admin
-          </h1>
-          <p className="text-muted max-w-sm mb-8 mx-auto">
-            This panel allows you to add custom trivia questions for the next Culture Bridge activity.
-          </p>
-          
-          <form onSubmit={handleUnlock} className="card p-6 flex flex-col gap-4 text-left max-w-sm mx-auto shadow-xl">
-            <div>
-              <label className="text-xs text-muted uppercase tracking-widest font-semibold ml-1">
-                Admin Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter admin password..."
-                className="w-full mt-2 bg-surface2 border-2 border-white/10 rounded-xl px-4 py-3 text-lg focus:border-saffron focus:bg-surface outline-none transition-all placeholder:text-white/20"
-              />
-            </div>
-            {error && (
-              <p className="text-red-400 text-sm font-medium bg-red-400/10 p-3 rounded-lg border border-red-400/20">
-                {error}
-              </p>
-            )}
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-saffron text-night font-bold py-4 rounded-xl hover:bg-saffron2 hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-saffron/20 disabled:opacity-60"
-            >
-              {loading ? "Unlocking…" : "Unlock Panel"}
-            </button>
-          </form>
-
-          <div className="mt-8">
-            <Link to="/" className="text-muted text-sm hover:text-cream transition-colors flex items-center justify-center gap-2 underline underline-offset-4">
-              <ArrowLeft size={16} /> Back to Home
-            </Link>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
   /* ── ADMIN PANEL INTERFACE ────────────────── */
+  if (!token || role !== "admin") return null;
+
   return (
     <div className="min-h-screen px-6 py-10 flex flex-col items-center">
-      <div className="w-full max-w-4xl">
+      <div className="w-full max-w-5xl">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs tracking-widest uppercase bg-lagoon/20 text-lagoon px-3 py-1 rounded-full font-semibold font-mono">
-                {clubDisplayName}
-              </span>
-              <span className="text-xs tracking-widest uppercase bg-saffron/10 text-saffron px-3 py-1 rounded-full font-semibold font-mono flex items-center gap-1.5">
-                <Unlock size={12} /> Authenticated
-              </span>
-            </div>
-            <h1 className="font-display text-3xl sm:text-4xl font-semibold mt-3">
-              Quiz Manager
+            <h1 className="font-display text-3xl sm:text-4xl font-semibold mt-3 text-cream">
+              Unified Question Manager
             </h1>
+            <p className="text-muted mt-2">Manage the Default, Mauritius, and TGS Wadi question banks.</p>
           </div>
           <div className="flex gap-3">
-            <button
-              onClick={handleLogout}
-              className="px-5 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 transition-colors text-muted hover:text-cream font-medium"
-            >
-              Log Out
-            </button>
             <Link
-              to="/"
+              to="/admin"
               className="px-5 py-2.5 rounded-xl bg-surface2 border border-white/10 hover:bg-surface transition-colors font-medium flex items-center gap-2"
             >
-              <ArrowLeft size={16} /> Home
+              <ArrowLeft size={16} /> Dashboard
             </Link>
           </div>
         </div>
 
-        {/* Warnings */}
-        <div className="bg-saffron/10 border border-saffron/20 rounded-2xl p-5 mb-8 flex items-start gap-4">
-          <div className="bg-saffron/20 p-2.5 rounded-xl text-saffron mt-0.5">
-            <AlertTriangle size={20} />
-          </div>
-          <div>
-            <h4 className="font-bold text-cream mb-1">Temporary Cloud Persistence Notice</h4>
-            <p className="text-muted text-sm leading-relaxed">
-              Because our backend server runs on a free instance, these custom questions are saved to a temporary JSON file. If the hosting server undergoes a redeployment or deep restart, this list will revert to default. Please save backup copies of your custom questions locally!
-            </p>
-          </div>
+        {/* Bank Selector */}
+        <div className="flex gap-2 mb-8 bg-surface2 p-2 rounded-2xl w-max border border-white/5 shadow-lg">
+          {["default", "mauritius", "tgswadi"].map((bankName) => (
+            <button
+              key={bankName}
+              onClick={() => {
+                setClub(bankName);
+                handleCancelEdit();
+              }}
+              className={`px-6 py-3 rounded-xl font-medium tracking-wide transition-all ${
+                club === bankName 
+                  ? "bg-lagoon text-night shadow-md" 
+                  : "text-muted hover:text-cream hover:bg-white/5"
+              }`}
+            >
+              {bankName === "default" ? "Default Bank" : bankName === "mauritius" ? "Mauritius Club" : "TGS Wadi Club"}
+            </button>
+          ))}
         </div>
 
         {/* Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Add Question Form */}
           <div className="lg:col-span-5 flex flex-col gap-6">
-            <div className="card p-6 shadow-xl">
+            <div className="card p-6 shadow-xl sticky top-6">
               <h3 className="font-display text-xl font-semibold mb-6 flex items-center gap-2">
-                <Plus size={20} className="text-lagoon" /> Add Custom Question
+                {editIndex !== null ? (
+                  <><Edit2 size={20} className="text-lagoon" /> Edit Question</>
+                ) : (
+                  <><Plus size={20} className="text-lagoon" /> Add Custom Question</>
+                )}
               </h3>
               
-              <form onSubmit={handleAddQuestion} className="flex flex-col gap-4 text-left">
+              <form onSubmit={handleSaveQuestion} className="flex flex-col gap-4 text-left">
                 {/* Format */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs text-muted uppercase tracking-widest font-semibold ml-1">
@@ -380,13 +331,24 @@ export default function Admin({ club }) {
                   </p>
                 )}
 
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="bg-lagoon text-night font-bold py-3.5 rounded-xl hover:bg-lagoon2 hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-lagoon/20 disabled:opacity-60 mt-2"
-                >
-                  {submitting ? "Adding Question…" : "Add Question"}
-                </button>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 bg-lagoon text-night font-bold py-3.5 rounded-xl hover:bg-lagoon2 hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-lagoon/20 disabled:opacity-60"
+                  >
+                    {submitting ? "Saving…" : editIndex !== null ? "Save Changes" : "Add Question"}
+                  </button>
+                  {editIndex !== null && (
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="px-6 bg-surface2 text-muted font-bold py-3.5 rounded-xl hover:bg-surface transition-all border border-white/10"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
               </form>
             </div>
           </div>
@@ -396,7 +358,7 @@ export default function Admin({ club }) {
             <div className="card p-6 shadow-xl min-h-[400px]">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="font-display text-xl font-semibold flex items-center gap-2">
-                  <HelpCircle size={20} className="text-saffron" /> Custom Questions ({questionsList.length})
+                  <HelpCircle size={20} className="text-saffron" /> {club === "default" ? "Default" : club === "mauritius" ? "Mauritius" : "TGS Wadi"} Bank ({questionsList.length})
                 </h3>
                 <button
                   onClick={fetchQuestions}
@@ -415,7 +377,7 @@ export default function Admin({ club }) {
               ) : questionsList.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center gap-3 text-muted/50 border-2 border-dashed border-white/5 rounded-2xl">
                   <p className="text-lg font-medium">No custom questions added yet</p>
-                  <p className="text-sm max-w-xs">Use the form on the left to add your club's custom questions to the quiz pool!</p>
+                  <p className="text-sm max-w-xs">Use the form on the left to add questions to this pool!</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4 max-h-[700px] overflow-y-auto pr-1">
@@ -424,7 +386,9 @@ export default function Admin({ club }) {
                       key={i}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-surface2 rounded-xl p-5 border border-white/5 relative group shadow-md"
+                      className={`bg-surface2 rounded-xl p-5 border relative group shadow-md transition-all ${
+                        editIndex === i ? "border-lagoon/50 shadow-[0_0_20px_rgba(47,191,174,0.15)]" : "border-white/5 hover:border-white/10"
+                      }`}
                     >
                       <div className="flex items-center gap-2 mb-2.5">
                         <span className="text-[10px] font-mono tracking-widest uppercase bg-surface px-2.5 py-1 rounded-md text-muted border border-white/5">
@@ -461,6 +425,15 @@ export default function Admin({ club }) {
                         <strong className="text-cream block mb-0.5">Explanation:</strong>
                         {q.explain}
                       </div>
+
+                      {/* Edit Button */}
+                      <button
+                        onClick={() => handleEditClick(i)}
+                        className="absolute top-4 right-14 p-2 rounded-lg bg-surface hover:bg-surface2 transition-all text-muted hover:text-lagoon shadow-sm border border-white/5"
+                        title="Edit Question"
+                      >
+                        <Edit2 size={14} />
+                      </button>
 
                       {/* Delete Button */}
                       <button

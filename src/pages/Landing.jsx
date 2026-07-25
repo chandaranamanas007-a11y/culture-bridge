@@ -57,25 +57,25 @@ export default function Landing() {
           Explore the shared traditions, food, and values of Gujarat and Mauritius. One person hosts, everyone else plays!
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-6 w-full max-w-md">
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1">
-            <Link
-              to="/host"
-              className="w-full flex items-center justify-center gap-3 bg-saffron text-night font-bold text-lg py-5 rounded-2xl shadow-[0_0_30px_rgba(242,169,59,0.3)] border-2 border-transparent hover:border-white/20 transition-all"
-            >
-              <Globe size={22} />
-              Host a Game
-            </Link>
-          </motion.div>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1">
+        <div className="flex flex-col gap-6 w-full max-w-md items-center">
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full">
             <Link
               to="/play"
-              className="w-full flex items-center justify-center gap-3 bg-lagoon text-night font-bold text-lg py-5 rounded-2xl shadow-[0_0_30px_rgba(47,191,174,0.3)] border-2 border-transparent hover:border-white/20 transition-all"
+              className="w-full flex items-center justify-center gap-3 bg-lagoon text-night font-bold text-xl py-6 rounded-2xl shadow-[0_0_40px_rgba(47,191,174,0.4)] border-2 border-transparent hover:border-white/20 transition-all"
             >
-              <Users size={22} />
-              Join Game
+              <Users size={28} />
+              Join a Game
             </Link>
           </motion.div>
+          
+          <div className="mt-8">
+            <Link
+              to="/login"
+              className="text-muted/60 hover:text-muted text-sm font-mono tracking-widest uppercase transition-colors"
+            >
+              Staff Login
+            </Link>
+          </div>
         </div>
       </motion.div>
     </div>
