@@ -32,6 +32,16 @@ function makeCode() {
   return code;
 }
 
+function extractCode(data) {
+  if (!data) return '';
+  if (typeof data === 'string') return data.trim().toUpperCase();
+  if (typeof data === 'object') {
+    if (data.code) return String(data.code).trim().toUpperCase();
+    if (data.roomCode) return String(data.roomCode).trim().toUpperCase();
+  }
+  return '';
+}
+
 const rooms = {};
 
 const QUESTION_TIME_LIMIT = 20; // seconds
@@ -220,6 +230,7 @@ io.on('connection', (socket) => {
 
       const code = makeCode();
       rooms[code] = {
+        code,
         status: 'lobby',
         currentQuestion: 0,
         players: {},
@@ -244,14 +255,15 @@ io.on('connection', (socket) => {
   });
 
   /* ─── HOST: Rejoin room ─── */
-  socket.on('rejoinHost', ({ code, token }, callback) => {
+  socket.on('rejoinHost', (data, callback) => {
     try {
+      const roomCode = extractCode(data);
+      const token = typeof data === 'object' ? data.token : null;
       const user = sessions[token];
       if (!user) {
         callback({ error: 'Unauthorized. Please log in.' });
         return;
       }
-      const roomCode = (code || '').toUpperCase();
       const room = rooms[roomCode];
       if (!room) {
         callback({ error: 'Room not found.' });
@@ -270,28 +282,35 @@ io.on('connection', (socket) => {
   });
 
   /* ─── HOST: Start game ─── */
-  socket.on('startGame', (code) => {
-    const room = rooms[code];
-    if (!room) return;
+  socket.on('startGame', (data) => {
+    const roomCode = extractCode(data);
+    const room = rooms[roomCode];
+    if (!room) {
+      console.error('✗ startGame failed: room not found for code:', roomCode);
+      return;
+    }
     room.lastActiveAt = Date.now();
     room.status = 'question';
     room.currentQuestion = 0;
     room.questionStartedAt = Date.now();
-    io.to(code).emit('roomUpdated', room);
-    console.log('✓ Game started in room:', code);
+    io.to(roomCode).emit('roomUpdated', room);
+    console.log('✓ Game started in room:', roomCode);
 
     // Auto-reveal after time limit
-    scheduleAutoReveal(code, 0);
+    scheduleAutoReveal(roomCode, 0);
   });
 
   /* ─── HOST: Reveal answer ─── */
-  socket.on('revealAnswer', ({ code }) => {
-    performReveal(code);
+  socket.on('revealAnswer', (data) => {
+    const roomCode = extractCode(data);
+    console.log('📢 revealAnswer event received for room:', roomCode);
+    performReveal(roomCode);
   });
 
   /* ─── HOST: Restart game ─── */
-  socket.on('restartGame', (code) => {
-    const room = rooms[code];
+  socket.on('restartGame', (data) => {
+    const roomCode = extractCode(data);
+    const room = rooms[roomCode];
     if (!room) return;
     room.lastActiveAt = Date.now();
 
@@ -308,13 +327,17 @@ io.on('connection', (socket) => {
       room.players[pid].score = 0;
       room.players[pid].lastPoints = 0;
     });
-    io.to(code).emit('roomUpdated', room);
-    console.log(`✓ Game restarted in room: ${code}`);
+    io.to(roomCode).emit('roomUpdated', room);
+    console.log(`✓ Game restarted in room: ${roomCode}`);
   });
 
   /* ─── HOST: Next question or end ─── */
-  socket.on('nextQuestion', ({ code, nextIndex, isEnd }) => {
-    const room = rooms[code];
+  socket.on('nextQuestion', (data) => {
+    const roomCode = extractCode(data);
+    const nextIndex = typeof data === 'object' ? data.nextIndex : 0;
+    const isEnd = typeof data === 'object' ? data.isEnd : false;
+
+    const room = rooms[roomCode];
     if (!room) return;
     room.lastActiveAt = Date.now();
 
@@ -330,13 +353,13 @@ io.on('connection', (socket) => {
       room.currentQuestion = nextIndex;
       room.questionStartedAt = Date.now();
       // Schedule auto-reveal for the new question
-      scheduleAutoReveal(code, nextIndex);
+      scheduleAutoReveal(roomCode, nextIndex);
     }
-    io.to(code).emit('roomUpdated', room);
+    io.to(roomCode).emit('roomUpdated', room);
     console.log(
       isEnd
-        ? `✓ Game ended in room ${code}`
-        : `✓ Advanced to Q${nextIndex + 1} in room ${code}`
+        ? `✓ Game ended in room ${roomCode}`
+        : `✓ Advanced to Q${nextIndex + 1} in room ${roomCode}`
     );
   });
 

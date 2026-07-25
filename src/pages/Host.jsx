@@ -112,39 +112,36 @@ export default function Host() {
     });
   }, [creating, token, selectedSetIds, navigate]);
 
+  const getRoomCode = useCallback(() => {
+    return code || room?.code || localStorage.getItem("hostCode");
+  }, [code, room]);
+
   const startGame = useCallback(() => {
-    if (code) {
-      socket.emit("startGame", code);
-    }
-  }, [code]);
+    const c = getRoomCode();
+    if (c) socket.emit("startGame", { code: c });
+  }, [getRoomCode]);
 
   const revealAnswer = useCallback(() => {
-    const currentRoom = roomRef.current;
-    if (!currentRoom || !code) return;
-    const q = currentRoom.questions?.[currentRoom.currentQuestion];
-    if (!q) return;
-    socket.emit("revealAnswer", {
-      code,
-      correctIndex: q.correct,
-    });
-  }, [code]);
+    const c = getRoomCode();
+    if (c) socket.emit("revealAnswer", { code: c });
+  }, [getRoomCode]);
 
   const nextQuestion = useCallback(() => {
+    const c = getRoomCode();
     const currentRoom = roomRef.current;
-    if (!currentRoom || !code) return;
+    if (!c || !currentRoom) return;
     const next = currentRoom.currentQuestion + 1;
     socket.emit("nextQuestion", {
-      code,
+      code: c,
       nextIndex: next,
       isEnd: next >= (currentRoom.questions?.length || 0),
     });
-  }, [code]);
+  }, [getRoomCode]);
 
   const restartGame = useCallback(() => {
-    if (code) {
-      socket.emit("restartGame", code);
-    }
-  }, [code]);
+    const c = getRoomCode();
+    if (c) socket.emit("restartGame", { code: c });
+  }, [getRoomCode]);
 
   useEffect(() => {
     const handleTimeUp = ({ questionIndex }) => {
