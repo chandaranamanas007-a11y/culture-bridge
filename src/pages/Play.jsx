@@ -51,37 +51,43 @@ export default function Play() {
     fetch(`${SERVER_URL}/ping`).catch((err) => console.log("Wake-up ping error:", err));
   }, []);
 
-  // Auto rejoin if active session exists
+  // Auto rejoin if active session exists & on socket reconnect
   useEffect(() => {
-    const savedCode = localStorage.getItem("playerRoomCode");
-    const savedName = localStorage.getItem("playerName");
-    const savedCountry = localStorage.getItem("playerCountry");
+    const doJoin = () => {
+      const savedCode = localStorage.getItem("playerRoomCode");
+      const savedName = localStorage.getItem("playerName");
+      const savedCountry = localStorage.getItem("playerCountry");
 
-    if (savedCode && savedName && savedCountry) {
-      socket.emit(
-        "joinRoom",
-        { code: savedCode, name: savedName, country: savedCountry, playerId },
-        (res) => {
-          if (res.error) {
-            localStorage.removeItem("playerRoomCode");
-          } else {
-            setCode(savedCode);
-            setJoined(true);
-            setRoom(res.room);
+      if (savedCode && savedName && savedCountry) {
+        socket.emit(
+          "joinRoom",
+          { code: savedCode, name: savedName, country: savedCountry, playerId },
+          (res) => {
+            if (res && res.error) {
+              localStorage.removeItem("playerRoomCode");
+            } else if (res && res.room) {
+              setCode(savedCode);
+              setJoined(true);
+              setRoom(res.room);
+            }
           }
-        }
-      );
-    }
+        );
+      }
+    };
+
+    doJoin();
+    socket.on("connect", doJoin);
+    return () => socket.off("connect", doJoin);
   }, [playerId]);
 
-  // Timer
+  // Timer (250ms update interval for ultra-smooth CPU performance)
   useEffect(() => {
     if (room?.status === "question" && room?.questionStartedAt) {
       const interval = setInterval(() => {
         const elapsed = (Date.now() - room.questionStartedAt) / 1000;
         const remaining = Math.max(0, room.timeLimit - elapsed);
         setTimeLeft(remaining);
-      }, 100);
+      }, 250);
       return () => clearInterval(interval);
     }
   }, [room?.status, room?.questionStartedAt, room?.timeLimit]);

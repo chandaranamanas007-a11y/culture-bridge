@@ -48,27 +48,31 @@ export default function Host() {
 
   useEffect(() => {
     if (!token) return;
-    // Fetch available question sets
-    socket.emit("getQuestionSets", { token }, (res) => {
-      setSetsLoading(false);
-      if (res && res.sets) {
-        setQuestionSets(res.sets);
-        // Default: select all sets
-        setSelectedSetIds(res.sets.map(s => s.id));
-      }
-    });
-    // Rejoin existing room if any
-    const savedCode = localStorage.getItem("hostCode");
-    if (savedCode) {
-      socket.emit("rejoinHost", { code: savedCode, token }, (res) => {
-        if (res && res.room) {
-          setCode(savedCode);
-          setRoom(res.room);
-        } else {
-          localStorage.removeItem("hostCode");
+
+    const doRejoin = () => {
+      socket.emit("getQuestionSets", { token }, (res) => {
+        setSetsLoading(false);
+        if (res && res.sets) {
+          setQuestionSets(res.sets);
+          setSelectedSetIds(prev => prev.length === 0 ? res.sets.map(s => s.id) : prev);
         }
       });
-    }
+      const savedCode = localStorage.getItem("hostCode");
+      if (savedCode) {
+        socket.emit("rejoinHost", { code: savedCode, token }, (res) => {
+          if (res && res.room) {
+            setCode(savedCode);
+            setRoom(res.room);
+          } else {
+            localStorage.removeItem("hostCode");
+          }
+        });
+      }
+    };
+
+    doRejoin();
+    socket.on("connect", doRejoin);
+    return () => socket.off("connect", doRejoin);
   }, [token]);
 
   useEffect(() => {
@@ -77,7 +81,7 @@ export default function Host() {
         const elapsed = (Date.now() - room.questionStartedAt) / 1000;
         const remaining = Math.max(0, room.timeLimit - elapsed);
         setTimeLeft(remaining);
-      }, 100);
+      }, 250);
       return () => clearInterval(interval);
     }
   }, [room?.status, room?.questionStartedAt, room?.timeLimit]);

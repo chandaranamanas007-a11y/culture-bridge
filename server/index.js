@@ -285,47 +285,8 @@ io.on('connection', (socket) => {
   });
 
   /* ─── HOST: Reveal answer ─── */
-  socket.on('revealAnswer', ({ code, correctIndex }) => {
-    const room = rooms[code];
-    if (!room || room.status !== 'question') return;
-    room.lastActiveAt = Date.now();
-    
-    if (room.timeoutId) {
-      clearTimeout(room.timeoutId);
-      room.timeoutId = null;
-    }
-    
-    const qIndex = room.currentQuestion;
-    const answersForQ = room.answers[qIndex] || {};
-    const questionStartedAt = room.questionStartedAt || Date.now();
-
-    // Score all correct answers with speed bonus
-    Object.entries(answersForQ).forEach(([pid, answerData]) => {
-      const choice = typeof answerData === 'object' ? answerData.answer : answerData;
-      const answeredAt = typeof answerData === 'object' ? answerData.answeredAt : Date.now();
-      
-      if (choice === correctIndex && room.players[pid]) {
-        const elapsed = (answeredAt - questionStartedAt) / 1000;
-        const speedRatio = Math.max(0, 1 - elapsed / QUESTION_TIME_LIMIT);
-        const speedBonus = Math.round(speedRatio * 50);
-        const points = 100 + speedBonus;
-        room.players[pid].score = (room.players[pid].score || 0) + points;
-        room.players[pid].lastPoints = points;
-      } else if (room.players[pid]) {
-        room.players[pid].lastPoints = 0;
-      }
-    });
-
-    // Players who didn't answer get 0
-    Object.keys(room.players).forEach((pid) => {
-      if (!answersForQ[pid]) {
-        room.players[pid].lastPoints = 0;
-      }
-    });
-
-    room.status = 'reveal';
-    io.to(code).emit('roomUpdated', room);
-    console.log(`✓ Answer revealed for Q${qIndex + 1} in room ${code}`);
+  socket.on('revealAnswer', ({ code }) => {
+    performReveal(code);
   });
 
   /* ─── HOST: Restart game ─── */
@@ -392,11 +353,12 @@ io.on('connection', (socket) => {
 
       rooms[roomCode].lastActiveAt = Date.now();
 
+      const existing = rooms[roomCode].players[playerId];
       rooms[roomCode].players[playerId] = {
         name,
         country,
-        score: 0,
-        lastPoints: 0,
+        score: existing ? existing.score : 0,
+        lastPoints: existing ? existing.lastPoints : 0,
         socketId: socket.id,
       };
       socket.join(roomCode);
@@ -437,6 +399,15 @@ io.on('connection', (socket) => {
     console.log(
       `✓ Player ${playerId} answered Q${questionIndex + 1} with option ${String.fromCharCode(65 + answerIndex)} in room ${code}`
     );
+
+    // Auto-reveal if all active players have submitted an answer
+    const totalPlayers = Object.keys(room.players).length;
+    const answeredCount = Object.keys(room.answers[questionIndex] || {}).length;
+    if (totalPlayers > 0 && answeredCount >= totalPlayers) {
+      setTimeout(() => {
+        performReveal(code);
+      }, 400);
+    }
   });
 
   /* ─── SHARED: Get Question Sets (admin + mentor) ─── */
@@ -586,7 +557,49 @@ io.on('connection', (socket) => {
   });
 });
 
-/* ─── Auto-reveal timer ─── */
+/* ─── Auto-reveal & scoring logic ─── */
+function performReveal(code) {
+  const room = rooms[code];
+  if (!room || room.status !== 'question') return;
+  room.lastActiveAt = Date.now();
+
+  if (room.timeoutId) {
+    clearTimeout(room.timeoutId);
+    room.timeoutId = null;
+  }
+
+  const qIndex = room.currentQuestion;
+  const q = room.questions?.[qIndex];
+  const correctIndex = q ? q.correct : 0;
+  const answersForQ = room.answers[qIndex] || {};
+  const questionStartedAt = room.questionStartedAt || Date.now();
+
+  Object.entries(answersForQ).forEach(([pid, answerData]) => {
+    const choice = typeof answerData === 'object' ? answerData.answer : answerData;
+    const answeredAt = typeof answerData === 'object' ? answerData.answeredAt : Date.now();
+    if (choice === correctIndex && room.players[pid]) {
+      const elapsed = (answeredAt - questionStartedAt) / 1000;
+      const speedRatio = Math.max(0, 1 - elapsed / QUESTION_TIME_LIMIT);
+      const speedBonus = Math.round(speedRatio * 50);
+      const points = 100 + speedBonus;
+      room.players[pid].score = (room.players[pid].score || 0) + points;
+      room.players[pid].lastPoints = points;
+    } else if (room.players[pid]) {
+      room.players[pid].lastPoints = 0;
+    }
+  });
+
+  Object.keys(room.players).forEach((pid) => {
+    if (!answersForQ[pid]) {
+      room.players[pid].lastPoints = 0;
+    }
+  });
+
+  room.status = 'reveal';
+  io.to(code).emit('roomUpdated', room);
+  console.log(`✓ Answer revealed for Q${qIndex + 1} in room ${code}`);
+}
+
 function scheduleAutoReveal(code, questionIndex) {
   const room = rooms[code];
   if (!room) return;
@@ -598,10 +611,11 @@ function scheduleAutoReveal(code, questionIndex) {
     if (!r) return;
     if (r.status !== 'question') return;
     if (r.currentQuestion !== questionIndex) return;
-    // Time's up — emit a timeUp event so host auto-reveals
+
+    console.log(`⏱ Time's up for Q${questionIndex + 1} in room ${code} — auto-revealing`);
     io.to(code).emit('timeUp', { questionIndex });
-    console.log(`⏱ Time's up for Q${questionIndex + 1} in room ${code}`);
-  }, (room.timeLimit + 1) * 1000); // +1s grace
+    performReveal(code);
+  }, room.timeLimit * 1000);
 }
 
 const PORT = process.env.PORT || 3001;
