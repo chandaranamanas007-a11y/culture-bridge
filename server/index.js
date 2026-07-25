@@ -22,6 +22,7 @@ const io = new Server(httpServer, {
   },
 });
 
+/* ─── Helpers ─── */
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function makeCode() {
   let code = '';
@@ -32,22 +33,25 @@ function makeCode() {
   return code;
 }
 
-function extractCode(data) {
-  if (!data) return '';
-  if (typeof data === 'string') return data.trim().toUpperCase();
-  if (typeof data === 'object') {
-    if (data.code) return String(data.code).trim().toUpperCase();
-    if (data.roomCode) return String(data.roomCode).trim().toUpperCase();
-  }
-  return '';
+// CRITICAL: Strip the non-serializable timeoutId before emitting over socket
+function roomPayload(room) {
+  const { timeoutId, ...safe } = room;
+  return safe;
+}
+
+// Emit a clean room object to all clients in a room
+function emitRoom(code) {
+  const room = rooms[code];
+  if (!room) return;
+  io.to(code).emit('roomUpdated', roomPayload(room));
 }
 
 const rooms = {};
 
 const QUESTION_TIME_LIMIT = 20; // seconds
 
+/* ─── Question Sets ─── */
 const QUESTION_SETS_PATH = path.join(__dirname, 'custom_questions.json');
-// questionSets: Array<{ id, name, questions: [] }>
 let questionSets = [];
 
 function makeSetId() {
@@ -58,25 +62,21 @@ function loadQuestionSets() {
   try {
     if (fs.existsSync(QUESTION_SETS_PATH)) {
       const data = JSON.parse(fs.readFileSync(QUESTION_SETS_PATH, 'utf8'));
-      // Migrate old object format { default: [], mauritius: [], tgswadi: [] } -> array
       if (!Array.isArray(data)) {
+        // Migrate old format
         questionSets = [];
-        if (data.default && data.default.length > 0) {
+        if (data.default && data.default.length > 0)
           questionSets.push({ id: 'set_default', name: 'Default Bank', questions: data.default });
-        }
-        if (data.mauritius && data.mauritius.length > 0) {
+        if (data.mauritius && data.mauritius.length > 0)
           questionSets.push({ id: 'set_mauritius', name: 'Mauritius Custom', questions: data.mauritius });
-        }
-        if (data.tgswadi && data.tgswadi.length > 0) {
+        if (data.tgswadi && data.tgswadi.length > 0)
           questionSets.push({ id: 'set_tgswadi', name: 'TGS Wadi Custom', questions: data.tgswadi });
-        }
         saveQuestionSets();
         console.log('✓ Migrated old question bank to new sets format');
         return;
       }
       questionSets = data;
     }
-    // Seed default set if empty
     if (questionSets.length === 0) {
       questionSets = [{ id: 'set_default', name: 'Default Bank', questions: [...defaultQuestions] }];
       saveQuestionSets();
@@ -97,14 +97,14 @@ function saveQuestionSets() {
 
 loadQuestionSets();
 
+/* ─── Accounts / Sessions ─── */
 const ACCOUNTS_PATH = path.join(__dirname, 'accounts.json');
 let accounts = [];
 
 function loadAccounts() {
   try {
     if (fs.existsSync(ACCOUNTS_PATH)) {
-      const data = fs.readFileSync(ACCOUNTS_PATH, 'utf8');
-      accounts = JSON.parse(data);
+      accounts = JSON.parse(fs.readFileSync(ACCOUNTS_PATH, 'utf8'));
     }
   } catch (err) {
     console.error('Error loading accounts:', err);
@@ -127,10 +127,72 @@ function generateToken() {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
 
+/* ─── Game logic helpers ─── */
+function performReveal(code) {
+  const room = rooms[code];
+  if (!room) { console.error(`performReveal: room ${code} not found`); return; }
+  if (room.status !== 'question') { console.log(`performReveal: room ${code} status is '${room.status}', skipping`); return; }
+
+  // Cancel any pending auto-reveal timer
+  if (room.timeoutId) {
+    clearTimeout(room.timeoutId);
+    room.timeoutId = null;
+  }
+
+  const qIndex = room.currentQuestion;
+  const q = room.questions?.[qIndex];
+  const correctIndex = q ? q.correct : 0;
+  const answersForQ = room.answers[qIndex] || {};
+  const questionStartedAt = room.questionStartedAt || Date.now();
+
+  // Score players
+  Object.entries(answersForQ).forEach(([pid, answerData]) => {
+    const choice = typeof answerData === 'object' ? answerData.answer : answerData;
+    const answeredAt = typeof answerData === 'object' ? answerData.answeredAt : Date.now();
+    if (choice === correctIndex && room.players[pid]) {
+      const elapsed = (answeredAt - questionStartedAt) / 1000;
+      const speedRatio = Math.max(0, 1 - elapsed / QUESTION_TIME_LIMIT);
+      const speedBonus = Math.round(speedRatio * 50);
+      const points = 100 + speedBonus;
+      room.players[pid].score = (room.players[pid].score || 0) + points;
+      room.players[pid].lastPoints = points;
+    } else if (room.players[pid]) {
+      room.players[pid].lastPoints = 0;
+    }
+  });
+
+  // Players who didn't answer
+  Object.keys(room.players).forEach((pid) => {
+    if (!answersForQ[pid]) {
+      room.players[pid].lastPoints = 0;
+    }
+  });
+
+  room.status = 'reveal';
+  room.lastActiveAt = Date.now();
+  emitRoom(code);
+  console.log(`✓ Answer revealed for Q${qIndex + 1} in room ${code}`);
+}
+
+function scheduleAutoReveal(code, questionIndex) {
+  const room = rooms[code];
+  if (!room) return;
+  if (room.timeoutId) clearTimeout(room.timeoutId);
+
+  room.timeoutId = setTimeout(() => {
+    const r = rooms[code];
+    if (!r || r.status !== 'question' || r.currentQuestion !== questionIndex) return;
+    console.log(`⏱ Auto-reveal triggered for Q${questionIndex + 1} in room ${code}`);
+    io.to(code).emit('timeUp', { questionIndex });
+    performReveal(code);
+  }, room.timeLimit * 1000);
+}
+
+/* ─── Socket handlers ─── */
 io.on('connection', (socket) => {
   console.log('✓ Client connected:', socket.id);
 
-  /* ─── AUTH: Login ─── */
+  /* ── AUTH ── */
   socket.on('login', ({ id, password }, callback) => {
     const user = accounts.find((a) => a.id === id && a.password === password);
     if (user) {
@@ -143,7 +205,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  /* ─── AUTH: Verify Session ─── */
   socket.on('verifySession', ({ token }, callback) => {
     const user = sessions[token];
     if (user) {
@@ -153,68 +214,42 @@ io.on('connection', (socket) => {
     }
   });
 
-  /* ─── ADMIN: Account Management ─── */
+  /* ── ADMIN: Accounts ── */
   socket.on('getAccounts', ({ token }, callback) => {
     const user = sessions[token];
-    if (!user || user.role !== 'admin') {
-      callback({ error: 'Unauthorized. Admin access required.' });
-      return;
-    }
-    // Return accounts without passwords
-    const safeAccounts = accounts.map(a => ({ id: a.id, name: a.name, role: a.role }));
-    callback({ accounts: safeAccounts });
+    if (!user || user.role !== 'admin') { callback({ error: 'Unauthorized. Admin access required.' }); return; }
+    callback({ accounts: accounts.map(a => ({ id: a.id, name: a.name, role: a.role })) });
   });
 
   socket.on('createAccount', ({ token, accountData }, callback) => {
     const user = sessions[token];
-    if (!user || user.role !== 'admin') {
-      callback({ error: 'Unauthorized. Admin access required.' });
-      return;
-    }
-    if (accounts.some(a => a.id === accountData.id)) {
-      callback({ error: 'An account with this ID already exists.' });
-      return;
-    }
+    if (!user || user.role !== 'admin') { callback({ error: 'Unauthorized. Admin access required.' }); return; }
+    if (accounts.some(a => a.id === accountData.id)) { callback({ error: 'An account with this ID already exists.' }); return; }
     accounts.push(accountData);
     saveAccounts();
-    const safeAccounts = accounts.map(a => ({ id: a.id, name: a.name, role: a.role }));
-    callback({ success: true, accounts: safeAccounts });
+    callback({ success: true, accounts: accounts.map(a => ({ id: a.id, name: a.name, role: a.role })) });
     console.log(`✓ Account ${accountData.id} created by admin`);
   });
 
   socket.on('deleteAccount', ({ token, id }, callback) => {
     const user = sessions[token];
-    if (!user || user.role !== 'admin') {
-      callback({ error: 'Unauthorized. Admin access required.' });
-      return;
-    }
-    if (id === 'admin') {
-      callback({ error: 'Cannot delete the Super Admin account.' });
-      return;
-    }
+    if (!user || user.role !== 'admin') { callback({ error: 'Unauthorized. Admin access required.' }); return; }
+    if (id === 'admin') { callback({ error: 'Cannot delete the Super Admin account.' }); return; }
     accounts = accounts.filter(a => a.id !== id);
     saveAccounts();
-    // Also invalidate their sessions
     for (const [sToken, sUser] of Object.entries(sessions)) {
-      if (sUser.id === id) {
-        delete sessions[sToken];
-      }
+      if (sUser.id === id) delete sessions[sToken];
     }
-    const safeAccounts = accounts.map(a => ({ id: a.id, name: a.name, role: a.role }));
-    callback({ success: true, accounts: safeAccounts });
+    callback({ success: true, accounts: accounts.map(a => ({ id: a.id, name: a.name, role: a.role })) });
     console.log(`🗑 Account ${id} deleted by admin`);
   });
 
-  /* ─── HOST: Create room ─── */
+  /* ── HOST: Create room ── */
   socket.on('createRoom', ({ token, setIds }, callback) => {
     try {
       const user = sessions[token];
-      if (!user) {
-        callback({ error: 'Unauthorized. Please log in.' });
-        return;
-      }
+      if (!user) { callback({ error: 'Unauthorized. Please log in.' }); return; }
 
-      // Compile questions from selected set IDs
       let roomQuestions = [];
       if (setIds && setIds.length > 0) {
         setIds.forEach(id => {
@@ -222,8 +257,6 @@ io.on('connection', (socket) => {
           if (set) roomQuestions = [...roomQuestions, ...set.questions];
         });
       }
-      
-      // Fallback to first set if nothing selected
       if (roomQuestions.length === 0) {
         roomQuestions = questionSets[0]?.questions || [...defaultQuestions];
       }
@@ -240,40 +273,33 @@ io.on('connection', (socket) => {
         hostSocketId: socket.id,
         questionStartedAt: null,
         timeLimit: QUESTION_TIME_LIMIT,
-        timeoutId: null,
+        timeoutId: null,          // stored server-side only, never sent to clients
         questions: roomQuestions,
       };
       socket.join(code);
-      socket.data = { ...(socket.data || {}), roomCode: code, role: 'host' };
+      socket.data = { roomCode: code, role: 'host' };
       callback({ code });
-      io.to(code).emit('roomUpdated', rooms[code]);
-      console.log('✓ Room created:', code);
+      emitRoom(code);
+      console.log(`✓ Room created: ${code} (${roomQuestions.length} questions)`);
     } catch (err) {
       console.error('✗ Error creating room:', err);
       callback({ error: 'Failed to create room' });
     }
   });
 
-  /* ─── HOST: Rejoin room ─── */
-  socket.on('rejoinHost', (data, callback) => {
+  /* ── HOST: Rejoin room ── */
+  socket.on('rejoinHost', ({ code, token }, callback) => {
     try {
-      const roomCode = extractCode(data);
-      const token = typeof data === 'object' ? data.token : null;
       const user = sessions[token];
-      if (!user) {
-        callback({ error: 'Unauthorized. Please log in.' });
-        return;
-      }
+      if (!user) { callback({ error: 'Unauthorized. Please log in.' }); return; }
+      const roomCode = (code || '').toUpperCase();
       const room = rooms[roomCode];
-      if (!room) {
-        callback({ error: 'Room not found.' });
-        return;
-      }
+      if (!room) { callback({ error: 'Room not found.' }); return; }
       room.hostSocketId = socket.id;
       socket.join(roomCode);
-      socket.data = { ...(socket.data || {}), roomCode, role: 'host' };
-      callback({ success: true, room });
-      io.to(roomCode).emit('roomUpdated', room);
+      socket.data = { roomCode, role: 'host' };
+      callback({ success: true, room: roomPayload(room) });
+      emitRoom(roomCode);
       console.log(`✓ Host rejoined room: ${roomCode}`);
     } catch (err) {
       console.error('✗ Error rejoining host:', err);
@@ -281,103 +307,80 @@ io.on('connection', (socket) => {
     }
   });
 
-  /* ─── HOST: Start game ─── */
-  socket.on('startGame', (data) => {
-    const roomCode = extractCode(data);
+  /* ── HOST: Start game ── */
+  socket.on('startGame', (code) => {
+    const roomCode = typeof code === 'string' ? code.toUpperCase() : (code?.code || '').toUpperCase();
     const room = rooms[roomCode];
-    if (!room) {
-      console.error('✗ startGame failed: room not found for code:', roomCode);
-      return;
-    }
+    if (!room) { console.error('✗ startGame: room not found:', roomCode); return; }
     room.lastActiveAt = Date.now();
     room.status = 'question';
     room.currentQuestion = 0;
+    room.answers = {};
     room.questionStartedAt = Date.now();
-    io.to(roomCode).emit('roomUpdated', room);
-    console.log('✓ Game started in room:', roomCode);
-
-    // Auto-reveal after time limit
+    emitRoom(roomCode);
+    console.log(`✓ Game started in room: ${roomCode}`);
     scheduleAutoReveal(roomCode, 0);
   });
 
-  /* ─── HOST: Reveal answer ─── */
-  socket.on('revealAnswer', (data) => {
-    const roomCode = extractCode(data);
-    console.log('📢 revealAnswer event received for room:', roomCode);
+  /* ── HOST: Reveal answer (manual skip) ── */
+  socket.on('revealAnswer', (code) => {
+    const roomCode = typeof code === 'string' ? code.toUpperCase() : (code?.code || '').toUpperCase();
+    console.log(`📢 revealAnswer received for room: ${roomCode}`);
     performReveal(roomCode);
   });
 
-  /* ─── HOST: Restart game ─── */
-  socket.on('restartGame', (data) => {
-    const roomCode = extractCode(data);
+  /* ── HOST: Next question ── */
+  socket.on('nextQuestion', ({ code, nextIndex, isEnd }) => {
+    const roomCode = (code || '').toUpperCase();
     const room = rooms[roomCode];
     if (!room) return;
     room.lastActiveAt = Date.now();
 
-    if (room.timeoutId) {
-      clearTimeout(room.timeoutId);
-      room.timeoutId = null;
-    }
-    room.status = 'lobby';
-    room.currentQuestion = 0;
-    room.answers = {};
-    room.questionStartedAt = null;
-    // Reset all player scores
-    Object.keys(room.players).forEach(pid => {
-      room.players[pid].score = 0;
-      room.players[pid].lastPoints = 0;
-    });
-    io.to(roomCode).emit('roomUpdated', room);
-    console.log(`✓ Game restarted in room: ${roomCode}`);
-  });
+    if (room.timeoutId) { clearTimeout(room.timeoutId); room.timeoutId = null; }
 
-  /* ─── HOST: Next question or end ─── */
-  socket.on('nextQuestion', (data) => {
-    const roomCode = extractCode(data);
-    const nextIndex = typeof data === 'object' ? data.nextIndex : 0;
-    const isEnd = typeof data === 'object' ? data.isEnd : false;
-
-    const room = rooms[roomCode];
-    if (!room) return;
-    room.lastActiveAt = Date.now();
-
-    if (room.timeoutId) {
-      clearTimeout(room.timeoutId);
-      room.timeoutId = null;
-    }
     if (isEnd) {
       room.status = 'ended';
       room.questionStartedAt = null;
     } else {
       room.status = 'question';
       room.currentQuestion = nextIndex;
+      room.answers = {};
       room.questionStartedAt = Date.now();
-      // Schedule auto-reveal for the new question
       scheduleAutoReveal(roomCode, nextIndex);
     }
-    io.to(roomCode).emit('roomUpdated', room);
-    console.log(
-      isEnd
-        ? `✓ Game ended in room ${roomCode}`
-        : `✓ Advanced to Q${nextIndex + 1} in room ${roomCode}`
-    );
+    emitRoom(roomCode);
+    console.log(isEnd ? `✓ Game ended in room ${roomCode}` : `✓ Advanced to Q${nextIndex + 1} in room ${roomCode}`);
   });
 
-  /* ─── PLAYER: Join room ─── */
+  /* ── HOST: Restart game ── */
+  socket.on('restartGame', (code) => {
+    const roomCode = typeof code === 'string' ? code.toUpperCase() : (code?.code || '').toUpperCase();
+    const room = rooms[roomCode];
+    if (!room) return;
+    room.lastActiveAt = Date.now();
+    if (room.timeoutId) { clearTimeout(room.timeoutId); room.timeoutId = null; }
+    room.status = 'lobby';
+    room.currentQuestion = 0;
+    room.answers = {};
+    room.questionStartedAt = null;
+    Object.keys(room.players).forEach(pid => {
+      room.players[pid].score = 0;
+      room.players[pid].lastPoints = 0;
+    });
+    emitRoom(roomCode);
+    console.log(`✓ Game restarted in room: ${roomCode}`);
+  });
+
+  /* ── PLAYER: Join room ── */
   socket.on('joinRoom', ({ code, name, country, playerId }, callback) => {
     try {
       const roomCode = (code || '').toUpperCase();
-      if (!rooms[roomCode]) {
-        callback({
-          error: 'No room found with that code. Double-check with your host.',
-        });
-        return;
-      }
+      const room = rooms[roomCode];
+      if (!room) { callback({ error: 'No room found with that code. Double-check with your host.' }); return; }
 
-      rooms[roomCode].lastActiveAt = Date.now();
-
-      const existing = rooms[roomCode].players[playerId];
-      rooms[roomCode].players[playerId] = {
+      room.lastActiveAt = Date.now();
+      const existing = room.players[playerId];
+      room.players[playerId] = {
         name,
         country,
         score: existing ? existing.score : 0,
@@ -385,72 +388,50 @@ io.on('connection', (socket) => {
         socketId: socket.id,
       };
       socket.join(roomCode);
-      socket.data = {
-        ...(socket.data || {}),
-        roomCode: roomCode,
-        playerId,
-        role: 'player',
-      };
-
-      io.to(roomCode).emit('roomUpdated', rooms[roomCode]);
-      callback({ success: true, room: rooms[roomCode] });
-      console.log(`✓ Player "${name}" (${playerId}) joined room ${roomCode}`);
+      socket.data = { roomCode, playerId, role: 'player' };
+      emitRoom(roomCode);
+      callback({ success: true, room: roomPayload(room) });
+      console.log(`✓ Player "${name}" joined room ${roomCode}`);
     } catch (err) {
       console.error('✗ Error joining room:', err);
       callback({ error: 'Something went wrong. Try again.' });
     }
   });
 
-  /* ─── PLAYER: Submit answer ─── */
+  /* ── PLAYER: Submit answer ── */
   socket.on('submitAnswer', ({ code, playerId, questionIndex, answerIndex }) => {
-    const room = rooms[code];
-    if (!room) return;
-    room.lastActiveAt = Date.now();
-    if (room.status !== 'question') return;
+    const roomCode = (code || '').toUpperCase();
+    const room = rooms[roomCode];
+    if (!room || room.status !== 'question') return;
     if (room.currentQuestion !== questionIndex) return;
 
-    if (!room.answers[questionIndex]) {
-      room.answers[questionIndex] = {};
-    }
+    if (!room.answers[questionIndex]) room.answers[questionIndex] = {};
     if (room.answers[questionIndex][playerId] !== undefined) return;
 
-    room.answers[questionIndex][playerId] = {
-      answer: answerIndex,
-      answeredAt: Date.now(),
-    };
-    io.to(code).emit('roomUpdated', room);
-    console.log(
-      `✓ Player ${playerId} answered Q${questionIndex + 1} with option ${String.fromCharCode(65 + answerIndex)} in room ${code}`
-    );
+    room.answers[questionIndex][playerId] = { answer: answerIndex, answeredAt: Date.now() };
+    room.lastActiveAt = Date.now();
+    emitRoom(roomCode);
+    console.log(`✓ Player ${playerId} answered Q${questionIndex + 1} option ${String.fromCharCode(65 + answerIndex)} in ${roomCode}`);
 
-    // Auto-reveal if all active players have submitted an answer
+    // Auto-reveal if all players answered
     const totalPlayers = Object.keys(room.players).length;
-    const answeredCount = Object.keys(room.answers[questionIndex] || {}).length;
+    const answeredCount = Object.keys(room.answers[questionIndex]).length;
     if (totalPlayers > 0 && answeredCount >= totalPlayers) {
-      setTimeout(() => {
-        performReveal(code);
-      }, 400);
+      setTimeout(() => performReveal(roomCode), 400);
     }
   });
 
-  /* ─── SHARED: Get Question Sets (admin + mentor) ─── */
+  /* ── SHARED: Get Question Sets ── */
   socket.on('getQuestionSets', ({ token }, callback) => {
     const user = sessions[token];
-    if (!user) {
-      callback({ error: 'Unauthorized. Please log in.' });
-      return;
-    }
-    // Mentors get a safe view (no need to hide anything, questions are not sensitive)
+    if (!user) { callback({ error: 'Unauthorized. Please log in.' }); return; }
     callback({ sets: questionSets });
   });
 
-  /* ─── ADMIN: Create Question Set ─── */
+  /* ── ADMIN: Question Set management ── */
   socket.on('createQuestionSet', ({ token, name }, callback) => {
     const user = sessions[token];
-    if (!user || user.role !== 'admin') {
-      callback({ error: 'Unauthorized. Admin access required.' });
-      return;
-    }
+    if (!user || user.role !== 'admin') { callback({ error: 'Unauthorized. Admin access required.' }); return; }
     const newSet = { id: makeSetId(), name: name || 'Untitled Set', questions: [] };
     questionSets.push(newSet);
     saveQuestionSets();
@@ -458,13 +439,9 @@ io.on('connection', (socket) => {
     console.log(`✓ Question set created: ${newSet.name}`);
   });
 
-  /* ─── ADMIN: Rename Question Set ─── */
   socket.on('renameQuestionSet', ({ token, setId, name }, callback) => {
     const user = sessions[token];
-    if (!user || user.role !== 'admin') {
-      callback({ error: 'Unauthorized. Admin access required.' });
-      return;
-    }
+    if (!user || user.role !== 'admin') { callback({ error: 'Unauthorized. Admin access required.' }); return; }
     const set = questionSets.find(s => s.id === setId);
     if (!set) { callback({ error: 'Set not found.' }); return; }
     set.name = name;
@@ -472,75 +449,50 @@ io.on('connection', (socket) => {
     callback({ success: true, sets: questionSets });
   });
 
-  /* ─── ADMIN: Delete Question Set ─── */
   socket.on('deleteQuestionSet', ({ token, setId }, callback) => {
     const user = sessions[token];
-    if (!user || user.role !== 'admin') {
-      callback({ error: 'Unauthorized. Admin access required.' });
-      return;
-    }
-    if (questionSets.length <= 1) {
-      callback({ error: 'Cannot delete the last question set.' });
-      return;
-    }
+    if (!user || user.role !== 'admin') { callback({ error: 'Unauthorized. Admin access required.' }); return; }
+    if (questionSets.length <= 1) { callback({ error: 'Cannot delete the last question set.' }); return; }
     questionSets = questionSets.filter(s => s.id !== setId);
     saveQuestionSets();
     callback({ success: true, sets: questionSets });
     console.log(`🗑 Question set deleted: ${setId}`);
   });
 
-  /* ─── ADMIN: Add Question to Set ─── */
   socket.on('addCustomQuestion', ({ token, setId, question }, callback) => {
     const user = sessions[token];
-    if (!user || user.role !== 'admin') {
-      callback({ error: 'Unauthorized. Admin access required.' });
-      return;
-    }
+    if (!user || user.role !== 'admin') { callback({ error: 'Unauthorized. Admin access required.' }); return; }
     const set = questionSets.find(s => s.id === setId);
     if (!set) { callback({ error: 'Set not found.' }); return; }
     set.questions.push(question);
     saveQuestionSets();
     callback({ success: true, sets: questionSets });
-    console.log(`✓ Question added to set: ${set.name}`);
   });
 
-  /* ─── ADMIN: Edit Question in Set ─── */
   socket.on('editCustomQuestion', ({ token, setId, index, question }, callback) => {
     const user = sessions[token];
-    if (!user || user.role !== 'admin') {
-      callback({ error: 'Unauthorized. Admin access required.' });
-      return;
-    }
+    if (!user || user.role !== 'admin') { callback({ error: 'Unauthorized. Admin access required.' }); return; }
     const set = questionSets.find(s => s.id === setId);
     if (!set || set.questions[index] === undefined) { callback({ error: 'Question not found.' }); return; }
     set.questions[index] = question;
     saveQuestionSets();
     callback({ success: true, sets: questionSets });
-    console.log(`✓ Question edited in set: ${set.name} at index ${index}`);
   });
 
-  /* ─── ADMIN: Delete Question from Set ─── */
   socket.on('deleteCustomQuestion', ({ token, setId, index }, callback) => {
     const user = sessions[token];
-    if (!user || user.role !== 'admin') {
-      callback({ error: 'Unauthorized. Admin access required.' });
-      return;
-    }
+    if (!user || user.role !== 'admin') { callback({ error: 'Unauthorized. Admin access required.' }); return; }
     const set = questionSets.find(s => s.id === setId);
     if (!set || set.questions[index] === undefined) { callback({ error: 'Question not found.' }); return; }
     set.questions.splice(index, 1);
     saveQuestionSets();
     callback({ success: true, sets: questionSets });
-    console.log(`🗑 Question deleted from set: ${set.name} at index ${index}`);
   });
 
-  /* ─── ADMIN: Get Active Rooms ─── */
+  /* ── ADMIN: Active Rooms ── */
   socket.on('getActiveRooms', ({ token }, callback) => {
     const user = sessions[token];
-    if (!user || user.role !== 'admin') {
-      callback({ error: 'Unauthorized. Admin access required.' });
-      return;
-    }
+    if (!user || user.role !== 'admin') { callback({ error: 'Unauthorized. Admin access required.' }); return; }
     const activeRooms = Object.entries(rooms).map(([code, room]) => ({
       code,
       status: room.status,
@@ -553,93 +505,24 @@ io.on('connection', (socket) => {
     callback({ rooms: activeRooms });
   });
 
-  /* ─── ADMIN: Terminate Room ─── */
+  /* ── ADMIN: Terminate Room ── */
   socket.on('terminateRoom', ({ token, code }, callback) => {
     const user = sessions[token];
-    if (!user || user.role !== 'admin') {
-      callback({ error: 'Unauthorized. Admin access required.' });
-      return;
-    }
+    if (!user || user.role !== 'admin') { callback({ error: 'Unauthorized. Admin access required.' }); return; }
     const room = rooms[code];
-    if (!room) {
-      callback({ error: 'Room not found.' });
-      return;
-    }
-    if (room.timeoutId) {
-      clearTimeout(room.timeoutId);
-    }
+    if (!room) { callback({ error: 'Room not found.' }); return; }
+    if (room.timeoutId) clearTimeout(room.timeoutId);
     io.to(code).emit('roomTerminated', { code, reason: 'The room was terminated by an administrator.' });
     delete rooms[code];
     callback({ success: true });
     console.log(`🗑 Room ${code} terminated by admin`);
   });
 
-  /* ─── DISCONNECT ─── */
+  /* ── DISCONNECT ── */
   socket.on('disconnect', () => {
     console.log('✗ Client disconnected:', socket.id);
   });
 });
-
-/* ─── Auto-reveal & scoring logic ─── */
-function performReveal(code) {
-  const room = rooms[code];
-  if (!room || room.status !== 'question') return;
-  room.lastActiveAt = Date.now();
-
-  if (room.timeoutId) {
-    clearTimeout(room.timeoutId);
-    room.timeoutId = null;
-  }
-
-  const qIndex = room.currentQuestion;
-  const q = room.questions?.[qIndex];
-  const correctIndex = q ? q.correct : 0;
-  const answersForQ = room.answers[qIndex] || {};
-  const questionStartedAt = room.questionStartedAt || Date.now();
-
-  Object.entries(answersForQ).forEach(([pid, answerData]) => {
-    const choice = typeof answerData === 'object' ? answerData.answer : answerData;
-    const answeredAt = typeof answerData === 'object' ? answerData.answeredAt : Date.now();
-    if (choice === correctIndex && room.players[pid]) {
-      const elapsed = (answeredAt - questionStartedAt) / 1000;
-      const speedRatio = Math.max(0, 1 - elapsed / QUESTION_TIME_LIMIT);
-      const speedBonus = Math.round(speedRatio * 50);
-      const points = 100 + speedBonus;
-      room.players[pid].score = (room.players[pid].score || 0) + points;
-      room.players[pid].lastPoints = points;
-    } else if (room.players[pid]) {
-      room.players[pid].lastPoints = 0;
-    }
-  });
-
-  Object.keys(room.players).forEach((pid) => {
-    if (!answersForQ[pid]) {
-      room.players[pid].lastPoints = 0;
-    }
-  });
-
-  room.status = 'reveal';
-  io.to(code).emit('roomUpdated', room);
-  console.log(`✓ Answer revealed for Q${qIndex + 1} in room ${code}`);
-}
-
-function scheduleAutoReveal(code, questionIndex) {
-  const room = rooms[code];
-  if (!room) return;
-  if (room.timeoutId) {
-    clearTimeout(room.timeoutId);
-  }
-  room.timeoutId = setTimeout(() => {
-    const r = rooms[code];
-    if (!r) return;
-    if (r.status !== 'question') return;
-    if (r.currentQuestion !== questionIndex) return;
-
-    console.log(`⏱ Time's up for Q${questionIndex + 1} in room ${code} — auto-revealing`);
-    io.to(code).emit('timeUp', { questionIndex });
-    performReveal(code);
-  }, room.timeLimit * 1000);
-}
 
 const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () => {
@@ -651,13 +534,10 @@ setInterval(() => {
   const now = Date.now();
   Object.keys(rooms).forEach((code) => {
     const room = rooms[code];
-    // Delete rooms that haven't been active for 6 hours
     if (now - room.lastActiveAt > 6 * 60 * 60 * 1000) {
-      if (room.timeoutId) {
-        clearTimeout(room.timeoutId);
-      }
+      if (room.timeoutId) clearTimeout(room.timeoutId);
       delete rooms[code];
       console.log(`🧹 Cleaned up idle room: ${code}`);
     }
   });
-}, 60 * 60 * 1000); // check hourly
+}, 60 * 60 * 1000);

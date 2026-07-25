@@ -112,18 +112,23 @@ export default function Host() {
     });
   }, [creating, token, selectedSetIds, navigate]);
 
+  const codeRef = useRef(code);
+  codeRef.current = code;
+
   const getRoomCode = useCallback(() => {
-    return code || room?.code || localStorage.getItem("hostCode");
-  }, [code, room]);
+    return codeRef.current || localStorage.getItem("hostCode") || "";
+  }, []);
 
   const startGame = useCallback(() => {
     const c = getRoomCode();
-    if (c) socket.emit("startGame", { code: c });
+    console.log("[Host] startGame → room:", c);
+    if (c) socket.emit("startGame", c);
   }, [getRoomCode]);
 
   const revealAnswer = useCallback(() => {
     const c = getRoomCode();
-    if (c) socket.emit("revealAnswer", { code: c });
+    console.log("[Host] revealAnswer → room:", c);
+    if (c) socket.emit("revealAnswer", c);
   }, [getRoomCode]);
 
   const nextQuestion = useCallback(() => {
@@ -140,21 +145,18 @@ export default function Host() {
 
   const restartGame = useCallback(() => {
     const c = getRoomCode();
-    if (c) socket.emit("restartGame", { code: c });
+    console.log("[Host] restartGame → room:", c);
+    if (c) socket.emit("restartGame", c);
   }, [getRoomCode]);
 
+  // timeUp is only informational now — server already performs the reveal itself
   useEffect(() => {
     const handleTimeUp = ({ questionIndex }) => {
-      const currentRoom = roomRef.current;
-      if (currentRoom && currentRoom.status === "question" && currentRoom.currentQuestion === questionIndex) {
-        revealAnswer();
-      }
+      console.log("[Host] timeUp event received for Q", questionIndex);
     };
     socket.on("timeUp", handleTimeUp);
-    return () => {
-      socket.off("timeUp", handleTimeUp);
-    };
-  }, [revealAnswer]);
+    return () => socket.off("timeUp", handleTimeUp);
+  }, []);
 
   useEffect(() => {
     const handleTerminated = ({ reason }) => {
