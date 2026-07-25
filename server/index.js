@@ -36,55 +36,56 @@ const rooms = {};
 
 const QUESTION_TIME_LIMIT = 20; // seconds
 
-const HOST_PASSWORD = process.env.HOST_PASSWORD || 'interact2026';
+const QUESTION_SETS_PATH = path.join(__dirname, 'custom_questions.json');
+// questionSets: Array<{ id, name, questions: [] }>
+let questionSets = [];
 
-const CUSTOM_QUESTIONS_PATH = path.join(__dirname, 'custom_questions.json');
-let customQuestions = { default: [], mauritius: [], tgswadi: [] };
+function makeSetId() {
+  return 'set_' + Math.random().toString(36).substring(2, 10);
+}
 
-function loadCustomQuestions() {
+function loadQuestionSets() {
   try {
-    let needsSave = false;
-    if (fs.existsSync(CUSTOM_QUESTIONS_PATH)) {
-      const data = fs.readFileSync(CUSTOM_QUESTIONS_PATH, 'utf8');
-      customQuestions = JSON.parse(data);
-      if (!customQuestions.mauritius) customQuestions.mauritius = [];
-      if (!customQuestions.tgswadi) customQuestions.tgswadi = [];
+    if (fs.existsSync(QUESTION_SETS_PATH)) {
+      const data = JSON.parse(fs.readFileSync(QUESTION_SETS_PATH, 'utf8'));
+      // Migrate old object format { default: [], mauritius: [], tgswadi: [] } -> array
+      if (!Array.isArray(data)) {
+        questionSets = [];
+        if (data.default && data.default.length > 0) {
+          questionSets.push({ id: 'set_default', name: 'Default Bank', questions: data.default });
+        }
+        if (data.mauritius && data.mauritius.length > 0) {
+          questionSets.push({ id: 'set_mauritius', name: 'Mauritius Custom', questions: data.mauritius });
+        }
+        if (data.tgswadi && data.tgswadi.length > 0) {
+          questionSets.push({ id: 'set_tgswadi', name: 'TGS Wadi Custom', questions: data.tgswadi });
+        }
+        saveQuestionSets();
+        console.log('✓ Migrated old question bank to new sets format');
+        return;
+      }
+      questionSets = data;
     }
-    
-    // Seed default questions if empty
-    if (!customQuestions.default || customQuestions.default.length === 0) {
-      customQuestions.default = [...defaultQuestions];
-      needsSave = true;
-    }
-
-    if (needsSave) {
-      saveCustomQuestions();
+    // Seed default set if empty
+    if (questionSets.length === 0) {
+      questionSets = [{ id: 'set_default', name: 'Default Bank', questions: [...defaultQuestions] }];
+      saveQuestionSets();
     }
   } catch (err) {
-    console.error('Error loading custom questions:', err);
+    console.error('Error loading question sets:', err);
+    questionSets = [{ id: 'set_default', name: 'Default Bank', questions: [...defaultQuestions] }];
   }
 }
 
-function saveCustomQuestions() {
+function saveQuestionSets() {
   try {
-    fs.writeFileSync(CUSTOM_QUESTIONS_PATH, JSON.stringify(customQuestions, null, 2), 'utf8');
+    fs.writeFileSync(QUESTION_SETS_PATH, JSON.stringify(questionSets, null, 2), 'utf8');
   } catch (err) {
-    console.error('Error saving custom questions:', err);
+    console.error('Error saving question sets:', err);
   }
 }
 
-loadCustomQuestions();
-
-const MAURITIUS_ADMIN_PASSWORD = process.env.MAURITIUS_ADMIN_PASSWORD || 'mauritius2026';
-const TGSWADI_ADMIN_PASSWORD = process.env.TGSWADI_ADMIN_PASSWORD || 'tgswadi2026';
-const DEFAULT_ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD || 'Interact2026';
-
-function verifyAdminPassword(club, password) {
-  if (club === 'mauritius') return password === MAURITIUS_ADMIN_PASSWORD;
-  if (club === 'tgswadi') return password === TGSWADI_ADMIN_PASSWORD;
-  if (club === 'default') return password === DEFAULT_ADMIN_PASSWORD;
-  return false;
-}
+loadQuestionSets();
 
 const ACCOUNTS_PATH = path.join(__dirname, 'accounts.json');
 let accounts = [];
@@ -195,7 +196,7 @@ io.on('connection', (socket) => {
   });
 
   /* ─── HOST: Create room ─── */
-  socket.on('createRoom', ({ token, questionPools }, callback) => {
+  socket.on('createRoom', ({ token, setIds }, callback) => {
     try {
       const user = sessions[token];
       if (!user) {
@@ -203,23 +204,18 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // Compile room questions based on selected pools
+      // Compile questions from selected set IDs
       let roomQuestions = [];
-      const pools = questionPools || { default: true, mauritius: true, tgswadi: true };
-      
-      if (pools.default && customQuestions.default) {
-        roomQuestions = [...roomQuestions, ...customQuestions.default];
-      }
-      if (pools.mauritius && customQuestions.mauritius) {
-        roomQuestions = [...roomQuestions, ...customQuestions.mauritius];
-      }
-      if (pools.tgswadi && customQuestions.tgswadi) {
-        roomQuestions = [...roomQuestions, ...customQuestions.tgswadi];
+      if (setIds && setIds.length > 0) {
+        setIds.forEach(id => {
+          const set = questionSets.find(s => s.id === id);
+          if (set) roomQuestions = [...roomQuestions, ...set.questions];
+        });
       }
       
-      // Fallback if no pools selected
+      // Fallback to first set if nothing selected
       if (roomQuestions.length === 0) {
-        roomQuestions = [...(customQuestions.default || defaultQuestions)];
+        roomQuestions = questionSets[0]?.questions || [...defaultQuestions];
       }
 
       const code = makeCode();
@@ -443,68 +439,105 @@ io.on('connection', (socket) => {
     );
   });
 
-  /* ─── ADMIN: Get Custom Questions ─── */
-  socket.on('getCustomQuestions', ({ token }, callback) => {
+  /* ─── SHARED: Get Question Sets (admin + mentor) ─── */
+  socket.on('getQuestionSets', ({ token }, callback) => {
     const user = sessions[token];
-    if (!user || user.role !== 'admin') {
-      callback({ error: 'Unauthorized. Admin access required.' });
+    if (!user) {
+      callback({ error: 'Unauthorized. Please log in.' });
       return;
     }
-    callback(customQuestions);
+    // Mentors get a safe view (no need to hide anything, questions are not sensitive)
+    callback({ sets: questionSets });
   });
 
-  /* ─── ADMIN: Add Custom Question ─── */
-  socket.on('addCustomQuestion', ({ token, club, question }, callback) => {
+  /* ─── ADMIN: Create Question Set ─── */
+  socket.on('createQuestionSet', ({ token, name }, callback) => {
     const user = sessions[token];
     if (!user || user.role !== 'admin') {
       callback({ error: 'Unauthorized. Admin access required.' });
       return;
     }
-    if (!question) {
-      callback({ success: true });
-      return;
-    }
-    if (!customQuestions[club]) {
-      customQuestions[club] = [];
-    }
-    customQuestions[club].push(question);
-    saveCustomQuestions();
-    callback({ success: true, customQuestions });
-    console.log(`✓ Custom question added for ${club}`);
+    const newSet = { id: makeSetId(), name: name || 'Untitled Set', questions: [] };
+    questionSets.push(newSet);
+    saveQuestionSets();
+    callback({ success: true, sets: questionSets });
+    console.log(`✓ Question set created: ${newSet.name}`);
   });
 
-  /* ─── ADMIN: Edit Custom Question ─── */
-  socket.on('editCustomQuestion', ({ token, club, index, question }, callback) => {
+  /* ─── ADMIN: Rename Question Set ─── */
+  socket.on('renameQuestionSet', ({ token, setId, name }, callback) => {
     const user = sessions[token];
     if (!user || user.role !== 'admin') {
       callback({ error: 'Unauthorized. Admin access required.' });
       return;
     }
-    if (customQuestions[club] && customQuestions[club][index] !== undefined) {
-      customQuestions[club][index] = question;
-      saveCustomQuestions();
-      callback({ success: true, customQuestions });
-      console.log(`✓ Custom question edited for ${club} at index ${index}`);
-    } else {
-      callback({ error: 'Question index invalid' });
-    }
+    const set = questionSets.find(s => s.id === setId);
+    if (!set) { callback({ error: 'Set not found.' }); return; }
+    set.name = name;
+    saveQuestionSets();
+    callback({ success: true, sets: questionSets });
   });
 
-  /* ─── ADMIN: Delete Custom Question ─── */
-  socket.on('deleteCustomQuestion', ({ token, club, index }, callback) => {
+  /* ─── ADMIN: Delete Question Set ─── */
+  socket.on('deleteQuestionSet', ({ token, setId }, callback) => {
     const user = sessions[token];
     if (!user || user.role !== 'admin') {
       callback({ error: 'Unauthorized. Admin access required.' });
       return;
     }
-    if (customQuestions[club] && customQuestions[club][index] !== undefined) {
-      customQuestions[club].splice(index, 1);
-      saveCustomQuestions();
-      callback({ success: true, customQuestions });
-      console.log(`✓ Custom question deleted for ${club} at index ${index}`);
-    } else {
-      callback({ error: 'Question index invalid' });
+    if (questionSets.length <= 1) {
+      callback({ error: 'Cannot delete the last question set.' });
+      return;
     }
+    questionSets = questionSets.filter(s => s.id !== setId);
+    saveQuestionSets();
+    callback({ success: true, sets: questionSets });
+    console.log(`🗑 Question set deleted: ${setId}`);
+  });
+
+  /* ─── ADMIN: Add Question to Set ─── */
+  socket.on('addCustomQuestion', ({ token, setId, question }, callback) => {
+    const user = sessions[token];
+    if (!user || user.role !== 'admin') {
+      callback({ error: 'Unauthorized. Admin access required.' });
+      return;
+    }
+    const set = questionSets.find(s => s.id === setId);
+    if (!set) { callback({ error: 'Set not found.' }); return; }
+    set.questions.push(question);
+    saveQuestionSets();
+    callback({ success: true, sets: questionSets });
+    console.log(`✓ Question added to set: ${set.name}`);
+  });
+
+  /* ─── ADMIN: Edit Question in Set ─── */
+  socket.on('editCustomQuestion', ({ token, setId, index, question }, callback) => {
+    const user = sessions[token];
+    if (!user || user.role !== 'admin') {
+      callback({ error: 'Unauthorized. Admin access required.' });
+      return;
+    }
+    const set = questionSets.find(s => s.id === setId);
+    if (!set || set.questions[index] === undefined) { callback({ error: 'Question not found.' }); return; }
+    set.questions[index] = question;
+    saveQuestionSets();
+    callback({ success: true, sets: questionSets });
+    console.log(`✓ Question edited in set: ${set.name} at index ${index}`);
+  });
+
+  /* ─── ADMIN: Delete Question from Set ─── */
+  socket.on('deleteCustomQuestion', ({ token, setId, index }, callback) => {
+    const user = sessions[token];
+    if (!user || user.role !== 'admin') {
+      callback({ error: 'Unauthorized. Admin access required.' });
+      return;
+    }
+    const set = questionSets.find(s => s.id === setId);
+    if (!set || set.questions[index] === undefined) { callback({ error: 'Question not found.' }); return; }
+    set.questions.splice(index, 1);
+    saveQuestionSets();
+    callback({ success: true, sets: questionSets });
+    console.log(`🗑 Question deleted from set: ${set.name} at index ${index}`);
   });
 
   /* ─── ADMIN: Get Active Rooms ─── */

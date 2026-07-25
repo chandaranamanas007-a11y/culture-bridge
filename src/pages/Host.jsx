@@ -28,10 +28,10 @@ export default function Host() {
   const [timeLeft, setTimeLeft] = useState(20);
   const [error, setError] = useState("");
 
-  // Quiz Pools Selection
-  const [includeDefault, setIncludeDefault] = useState(true);
-  const [includeMauritius, setIncludeMauritius] = useState(true);
-  const [includeTgsWadi, setIncludeTgsWadi] = useState(true);
+  // Question Sets Selection
+  const [questionSets, setQuestionSets] = useState([]);
+  const [selectedSetIds, setSelectedSetIds] = useState([]);
+  const [setsLoading, setSetsLoading] = useState(true);
 
   const roomRef = useRef(room);
   roomRef.current = room;
@@ -47,8 +47,19 @@ export default function Host() {
   }, []);
 
   useEffect(() => {
+    if (!token) return;
+    // Fetch available question sets
+    socket.emit("getQuestionSets", { token }, (res) => {
+      setSetsLoading(false);
+      if (res && res.sets) {
+        setQuestionSets(res.sets);
+        // Default: select all sets
+        setSelectedSetIds(res.sets.map(s => s.id));
+      }
+    });
+    // Rejoin existing room if any
     const savedCode = localStorage.getItem("hostCode");
-    if (savedCode && token) {
+    if (savedCode) {
       socket.emit("rejoinHost", { code: savedCode, token }, (res) => {
         if (res && res.room) {
           setCode(savedCode);
@@ -71,29 +82,31 @@ export default function Host() {
     }
   }, [room?.status, room?.questionStartedAt, room?.timeLimit]);
 
+  const toggleSet = (id) => {
+    setSelectedSetIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
   const createRoom = useCallback(() => {
     if (creating) return;
     setError("");
+    if (selectedSetIds.length === 0) {
+      setError("Please select at least one question set.");
+      return;
+    }
     setCreating(true);
-    const questionPools = {
-      default: includeDefault,
-      mauritius: includeMauritius,
-      tgswadi: includeTgsWadi,
-    };
-    socket.emit("createRoom", { token, questionPools }, (res) => {
+    socket.emit("createRoom", { token, setIds: selectedSetIds }, (res) => {
       if (res && res.code) {
         setCode(res.code);
         localStorage.setItem("hostCode", res.code);
       } else if (res && res.error) {
         setError(res.error);
-        if (res.error.includes("Unauthorized")) {
-          localStorage.clear();
-          navigate("/login");
-        }
+        if (res.error.includes("Unauthorized")) { localStorage.clear(); navigate("/login"); }
       }
       setCreating(false);
     });
-  }, [creating, token, includeDefault, includeMauritius, includeTgsWadi, navigate]);
+  }, [creating, token, selectedSetIds, navigate]);
 
   const startGame = useCallback(() => {
     if (code) {
@@ -169,81 +182,90 @@ export default function Host() {
 
   /* ── Pre-game: create room ─────────────────── */
   if (!code) {
+    const totalQs = questionSets
+      .filter(s => selectedSetIds.includes(s.id))
+      .reduce((sum, s) => sum + s.questions.length, 0);
+
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-md w-full"
-        >
-          <p className="font-mono text-xs tracking-[0.3em] text-lagoon uppercase mb-4">
-            Host console
-          </p>
-          <h1 className="font-display text-4xl font-semibold mb-6">
-            Start a Culture Bridge game
-          </h1>
-          <p className="text-muted max-w-sm mb-8 mx-auto">
-            This creates a room others can join with a 4-letter code. Share
-            your screen so the group can follow along together.
-          </p>
-          
-          <div className="card p-6 flex flex-col gap-4 text-left max-w-sm mx-auto shadow-xl mb-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-lg w-full">
+          <div className="mb-8">
+            <p className="font-mono text-xs tracking-[0.3em] text-lagoon uppercase mb-4">Host Console</p>
+            <h1 className="font-display text-4xl font-semibold mb-4">Start a Culture Bridge game</h1>
+            <p className="text-muted max-w-sm mx-auto">Select one or more question sets, then create a room for your group to join.</p>
+          </div>
 
-            {/* Question Pools Selection */}
-            <div className="flex flex-col gap-2 mt-2">
-              <label className="text-xs text-muted uppercase tracking-widest font-semibold ml-1">
-                Quiz Question Pools
-              </label>
-              <div className="flex flex-col gap-2.5 bg-surface2/50 p-4 rounded-xl border border-white/5">
-                <label className="flex items-center gap-3 text-sm cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={includeDefault}
-                    onChange={(e) => setIncludeDefault(e.target.checked)}
-                    className="accent-saffron w-4 h-4 cursor-pointer"
-                  />
-                  <span>Default Quiz (16 Questions)</span>
-                </label>
-                <label className="flex items-center gap-3 text-sm cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={includeMauritius}
-                    onChange={(e) => setIncludeMauritius(e.target.checked)}
-                    className="accent-saffron w-4 h-4 cursor-pointer"
-                  />
-                  <span>Mauritius Custom Questions</span>
-                </label>
-                <label className="flex items-center gap-3 text-sm cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={includeTgsWadi}
-                    onChange={(e) => setIncludeTgsWadi(e.target.checked)}
-                    className="accent-saffron w-4 h-4 cursor-pointer"
-                  />
-                  <span>TGS Wadi Custom Questions</span>
-                </label>
+          <div className="card p-6 text-left shadow-2xl mb-6">
+            <label className="block text-[11px] font-mono tracking-[0.2em] uppercase text-muted mb-4">Select Question Sets</label>
+
+            {setsLoading ? (
+              <div className="flex items-center gap-3 py-8 justify-center text-muted">
+                <div className="w-5 h-5 border-2 border-lagoon border-t-transparent rounded-full animate-spin" />
+                Loading sets...
               </div>
-            </div>
+            ) : questionSets.length === 0 ? (
+              <div className="text-center py-8 text-muted/60">
+                <p>No question sets found. Ask an Admin to create some!</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {questionSets.map(set => {
+                  const isSelected = selectedSetIds.includes(set.id);
+                  return (
+                    <button
+                      key={set.id}
+                      type="button"
+                      onClick={() => toggleSet(set.id)}
+                      className={`flex items-center justify-between px-4 py-4 rounded-2xl border-2 transition-all text-left group ${
+                        isSelected
+                          ? "border-lagoon/60 bg-lagoon/10 shadow-lg shadow-lagoon/10"
+                          : "border-white/10 bg-surface2/50 hover:border-white/20 hover:bg-surface2"
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                          isSelected ? "border-lagoon bg-lagoon" : "border-white/20"
+                        }`}>
+                          {isSelected && <span className="text-night font-bold text-[10px]">✓</span>}
+                        </div>
+                        <div>
+                          <p className={`font-semibold transition-colors ${isSelected ? "text-cream" : "text-muted group-hover:text-cream"}`}>
+                            {set.name}
+                          </p>
+                          <p className="text-xs text-muted/60 font-mono mt-0.5">{set.questions.length} question{set.questions.length !== 1 ? "s" : ""}</p>
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <span className="text-[10px] font-mono text-lagoon/70 bg-lagoon/10 px-2 py-1 rounded-lg border border-lagoon/20">Selected</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {selectedSetIds.length > 0 && (
+              <div className="mt-4 px-4 py-3 bg-saffron/8 rounded-xl border border-saffron/20 text-sm text-saffron/80 font-mono">
+                {totalQs} total question{totalQs !== 1 ? "s" : ""} from {selectedSetIds.length} set{selectedSetIds.length !== 1 ? "s" : ""}
+              </div>
+            )}
 
             {error && (
-              <p className="text-red-400 text-sm font-medium bg-red-400/10 p-3 rounded-lg border border-red-400/20">
-                {error}
-              </p>
+              <div className="mt-4 text-red-400 text-sm bg-red-400/10 p-3 rounded-xl border border-red-400/20">{error}</div>
             )}
+
             <button
               onClick={createRoom}
-              disabled={creating}
-              className="bg-saffron text-night font-bold py-4 rounded-xl hover:bg-saffron2 hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-saffron/20 disabled:opacity-60"
+              disabled={creating || selectedSetIds.length === 0}
+              className="w-full mt-6 bg-saffron text-night font-bold py-4 rounded-2xl hover:bg-saffron2 hover:scale-[1.01] active:scale-[0.99] transition-all shadow-lg shadow-saffron/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {creating ? "Creating…" : "Create Room"}
+              {creating ? "Creating Room…" : `Create Room${totalQs > 0 ? ` (${totalQs} Qs)` : ""}`}
             </button>
           </div>
 
-          <div className="mt-8">
-            <Link to="/" className="text-muted text-sm hover:text-cream transition-colors underline underline-offset-4">
-              Back to Home
-            </Link>
-          </div>
+          <Link to="/" className="text-muted text-sm hover:text-cream transition-colors underline underline-offset-4">
+            Back to Home
+          </Link>
         </motion.div>
       </div>
     );
