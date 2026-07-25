@@ -73,7 +73,7 @@ export default function Landing() {
               to="/login"
               className="text-muted/60 hover:text-muted text-sm font-mono tracking-widest uppercase transition-colors"
             >
-              Staff Login
+              Admin Login
             </Link>
           </div>
         </div>

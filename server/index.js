@@ -121,6 +121,49 @@ function saveAccounts() {
 
 loadAccounts();
 
+/* ─── Quiz History Persistence ─── */
+const HISTORY_PATH = path.join(__dirname, 'game_history.json');
+let gameHistory = [];
+
+function loadGameHistory() {
+  try {
+    if (fs.existsSync(HISTORY_PATH)) {
+      gameHistory = JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf8'));
+    }
+  } catch (err) {
+    console.error('Error loading game history:', err);
+  }
+}
+
+function recordGameHistory(room) {
+  try {
+    const playersList = Object.values(room.players || {}).map(p => ({
+      name: p.name,
+      country: p.country,
+      score: p.score || 0
+    })).sort((a, b) => b.score - a.score);
+
+    const historyRecord = {
+      id: 'game_' + Date.now(),
+      code: room.code,
+      endedAt: Date.now(),
+      totalQuestions: room.questions ? room.questions.length : 0,
+      playerCount: playersList.length,
+      leaderboard: playersList
+    };
+
+    gameHistory.unshift(historyRecord);
+    if (gameHistory.length > 100) gameHistory = gameHistory.slice(0, 100);
+
+    fs.writeFileSync(HISTORY_PATH, JSON.stringify(gameHistory, null, 2), 'utf8');
+    console.log(`💾 Saved quiz scores and history for room ${room.code}`);
+  } catch (err) {
+    console.error('Error recording game history:', err);
+  }
+}
+
+loadGameHistory();
+
 const sessions = {}; // token -> user object
 
 function generateToken() {
@@ -341,6 +384,7 @@ io.on('connection', (socket) => {
     if (isEnd) {
       room.status = 'ended';
       room.questionStartedAt = null;
+      recordGameHistory(room);
     } else {
       room.status = 'question';
       room.currentQuestion = nextIndex;
@@ -350,6 +394,13 @@ io.on('connection', (socket) => {
     }
     emitRoom(roomCode);
     console.log(isEnd ? `✓ Game ended in room ${roomCode}` : `✓ Advanced to Q${nextIndex + 1} in room ${roomCode}`);
+  });
+
+  /* ── ADMIN: Get Game History ── */
+  socket.on('getGameHistory', ({ token }, callback) => {
+    const user = sessions[token];
+    if (!user || user.role !== 'admin') { callback({ error: 'Unauthorized. Admin access required.' }); return; }
+    callback({ history: gameHistory });
   });
 
   /* ── HOST: Restart game ── */

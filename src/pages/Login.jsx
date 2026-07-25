@@ -53,10 +53,10 @@ export default function Login() {
           Culture Bridge
         </p>
         <h1 className="font-display text-4xl font-semibold mb-6">
-          Staff Login
+          Admin Login
         </h1>
         <p className="text-muted max-w-sm mb-8 mx-auto">
-          For authorized Admins and Mentors only. Please log in with your assigned ID and password.
+          Authorized Admin & Mentor Portal. Log in with your assigned ID and password.
         </p>
         
         <form onSubmit={handleLogin} className="card p-6 flex flex-col gap-4 text-left max-w-sm mx-auto shadow-xl">

@@ -55,6 +55,10 @@ export default function CentralAdmin() {
   const [terminating, setTerminating] = useState(null);
   const [lastRefreshed, setLastRefreshed] = useState(null);
 
+  // History state
+  const [history, setHistory] = useState([]);
+  const [selectedHistoryGame, setSelectedHistoryGame] = useState(null);
+
   const fetchRooms = useCallback(() => {
     if (!token) return;
     setLoadingRooms(true);
@@ -81,14 +85,24 @@ export default function CentralAdmin() {
     });
   }, [token]);
 
+  const fetchHistory = useCallback(() => {
+    if (!token) return;
+    socket.emit("getGameHistory", { token }, (res) => {
+      if (res && res.history) {
+        setHistory(res.history);
+      }
+    });
+  }, [token]);
+
   useEffect(() => {
     if (token) {
       fetchRooms();
       fetchAccounts();
+      fetchHistory();
     }
     const interval = setInterval(fetchRooms, 10000);
     return () => clearInterval(interval);
-  }, [token, fetchRooms, fetchAccounts]);
+  }, [token, fetchRooms, fetchAccounts, fetchHistory]);
 
   const handleCreateAccount = (e) => {
     e.preventDefault();
@@ -194,21 +208,38 @@ export default function CentralAdmin() {
             </div>
           </Link>
           
-          <div className="card p-7 flex flex-col gap-4 shadow-xl bg-surface2 opacity-50 relative overflow-hidden">
-             {/* Placeholder for future tools */}
-             <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-2xl border border-white/10">
+          <div className="card p-7 flex flex-col gap-4 shadow-xl bg-surface2 relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <div className="w-12 h-12 bg-saffron/10 rounded-xl flex items-center justify-center text-2xl border border-saffron/20">
                 📊
               </div>
+              <span className="font-mono text-xs text-saffron bg-saffron/10 px-2.5 py-1 rounded-md border border-saffron/20">
+                {history.length} Saved Quiz{history.length === 1 ? "" : "zes"}
+              </span>
             </div>
             <div>
               <h3 className="font-display text-xl font-semibold text-cream">
-                Game Analytics (Coming Soon)
+                Quiz History & Saved Scores
               </h3>
               <p className="text-muted text-sm mt-2">
-                View statistics and past game results.
+                All participant scores and quiz leaderboards are automatically saved on the server.
               </p>
             </div>
+            {history.length > 0 && (
+              <div className="mt-2 flex flex-col gap-2 max-h-[140px] overflow-y-auto pr-1">
+                {history.slice(0, 3).map((g) => (
+                  <div key={g.id} className="bg-surface p-3 rounded-lg border border-white/5 flex items-center justify-between text-xs">
+                    <div>
+                      <span className="font-mono font-bold text-saffron">Room {g.code}</span>
+                      <span className="text-muted/60 ml-2">• {g.playerCount} players</span>
+                    </div>
+                    <div className="font-mono text-cream font-bold">
+                      Winner: {g.leaderboard?.[0]?.name || "N/A"} ({g.leaderboard?.[0]?.score || 0} pts)
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
