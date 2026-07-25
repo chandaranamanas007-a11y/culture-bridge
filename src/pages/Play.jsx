@@ -175,11 +175,12 @@ export default function Play() {
 
   const submitAnswer = useCallback(
     (i) => {
-      if (selected !== null || !room) return;
+      const roomCode = (code || room?.code || localStorage.getItem("playerRoomCode") || "").trim().toUpperCase();
+      if (selected !== null || !room || !roomCode) return;
       setSelected(i);
       setAnsweredIndex(i);
       socket.emit("submitAnswer", {
-        code,
+        code: roomCode,
         playerId,
         questionIndex: room.currentQuestion,
         answerIndex: i,
