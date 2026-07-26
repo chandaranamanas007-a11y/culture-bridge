@@ -3,9 +3,12 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import fs from 'fs';
+import googleDriveClient from './googleDriveClient.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { questions as defaultQuestions } from './default_questions.js';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -81,8 +84,20 @@ function makeSetId() {
   return 'set_' + Math.random().toString(36).substring(2, 10);
 }
 
-function loadQuestionSets() {
+async function loadQuestionSets() {
   try {
+    // Prefer Drive data if available
+    if (process.env.GOOGLE_DRIVE_FOLDER_ID) {
+      const remote = await googleDriveClient.readJson('custom_questions.json');
+      if (remote) {
+        questionSets = remote;
+        console.log('✓ Loaded question sets from Google Drive');
+        // Persist locally for faster subsequent loads
+        fs.writeFileSync(QUESTION_SETS_PATH, JSON.stringify(questionSets, null, 2), 'utf8');
+        return;
+      }
+    }
+    // Fallback to local file
     if (fs.existsSync(QUESTION_SETS_PATH)) {
       const data = JSON.parse(fs.readFileSync(QUESTION_SETS_PATH, 'utf8'));
       if (!Array.isArray(data)) {
@@ -110,9 +125,14 @@ function loadQuestionSets() {
   }
 }
 
+
 function saveQuestionSets() {
   try {
     fs.writeFileSync(QUESTION_SETS_PATH, JSON.stringify(questionSets, null, 2), 'utf8');
+    // Also persist to Google Drive (non‑blocking)
+    googleDriveClient.writeJson('custom_questions.json', questionSets).catch(err => {
+      console.error('Error syncing question sets to Google Drive:', err);
+    });
   } catch (err) {
     console.error('Error saving question sets:', err);
   }
@@ -124,19 +144,37 @@ loadQuestionSets();
 const ACCOUNTS_PATH = path.join(DATA_DIR, 'accounts.json');
 let accounts = [];
 
-function loadAccounts() {
+async function loadAccounts() {
   try {
+    // Try to load from Google Drive first
+    if (process.env.GOOGLE_DRIVE_FOLDER_ID) {
+      const remote = await googleDriveClient.readJson('accounts.json');
+      if (remote) {
+        accounts = remote;
+        console.log('✓ Loaded accounts from Google Drive');
+        // Persist locally for faster future loads
+        fs.writeFileSync(ACCOUNTS_PATH, JSON.stringify(accounts, null, 2), 'utf8');
+        return;
+      }
+    }
+    // Fallback to local file
     if (fs.existsSync(ACCOUNTS_PATH)) {
       accounts = JSON.parse(fs.readFileSync(ACCOUNTS_PATH, 'utf8'));
     }
   } catch (err) {
     console.error('Error loading accounts:', err);
+    accounts = [];
   }
 }
+
 
 function saveAccounts() {
   try {
     fs.writeFileSync(ACCOUNTS_PATH, JSON.stringify(accounts, null, 2), 'utf8');
+    // Also persist to Google Drive (non‑blocking)
+    googleDriveClient.writeJson('accounts.json', accounts).catch(err => {
+      console.error('Error syncing accounts to Google Drive:', err);
+    });
   } catch (err) {
     console.error('Error saving accounts:', err);
   }
@@ -148,13 +186,26 @@ loadAccounts();
 const HISTORY_PATH = path.join(DATA_DIR, 'game_history.json');
 let gameHistory = [];
 
-function loadGameHistory() {
+async function loadGameHistory() {
   try {
+    // Prefer Drive data if available
+    if (process.env.GOOGLE_DRIVE_FOLDER_ID) {
+      const remote = await googleDriveClient.readJson('game_history.json');
+      if (remote) {
+        gameHistory = remote;
+        console.log('✓ Loaded game history from Google Drive');
+        // Persist locally for faster loads
+        fs.writeFileSync(HISTORY_PATH, JSON.stringify(gameHistory, null, 2), 'utf8');
+        return;
+      }
+    }
+    // Fallback to local file
     if (fs.existsSync(HISTORY_PATH)) {
       gameHistory = JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf8'));
     }
   } catch (err) {
     console.error('Error loading game history:', err);
+    gameHistory = [];
   }
 }
 
@@ -179,6 +230,10 @@ function recordGameHistory(room) {
     if (gameHistory.length > 100) gameHistory = gameHistory.slice(0, 100);
 
     fs.writeFileSync(HISTORY_PATH, JSON.stringify(gameHistory, null, 2), 'utf8');
+    // Sync to Google Drive (non‑blocking)
+    googleDriveClient.writeJson('game_history.json', gameHistory).catch(err => {
+      console.error('Error syncing game history to Google Drive:', err);
+    });
     console.log(`💾 Saved quiz scores and history for room ${room.code}`);
   } catch (err) {
     console.error('Error recording game history:', err);

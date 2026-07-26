@@ -23,7 +23,8 @@
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.1",
     "socket.io": "^4.8.3",
-    "socket.io-client": "^4.8.3"
+    "socket.io-client": "^4.8.3",
+    "googleapis": "^133.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.17",
