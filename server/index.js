@@ -50,8 +50,31 @@ const rooms = {};
 
 const QUESTION_TIME_LIMIT = 20; // seconds
 
-/* ─── Question Sets ─── */
-const QUESTION_SETS_PATH = path.join(__dirname, 'custom_questions.json');
+/* ─── Question Sets & Data Persistence Directory ─── */
+const DATA_DIR = path.join(__dirname, 'data');
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+// Auto-migration helper for existing files
+const migrateFile = (oldName, newName) => {
+  const oldPath = path.join(__dirname, oldName);
+  const newPath = path.join(DATA_DIR, newName);
+  if (fs.existsSync(oldPath) && !fs.existsSync(newPath)) {
+    try {
+      fs.renameSync(oldPath, newPath);
+      console.log(`✓ Migrated ${oldName} to data/${newName}`);
+    } catch (e) {
+      console.error(`Failed to migrate ${oldName}:`, e);
+    }
+  }
+};
+
+migrateFile('custom_questions.json', 'custom_questions.json');
+migrateFile('accounts.json', 'accounts.json');
+migrateFile('game_history.json', 'game_history.json');
+
+const QUESTION_SETS_PATH = path.join(DATA_DIR, 'custom_questions.json');
 let questionSets = [];
 
 function makeSetId() {
@@ -98,7 +121,7 @@ function saveQuestionSets() {
 loadQuestionSets();
 
 /* ─── Accounts / Sessions ─── */
-const ACCOUNTS_PATH = path.join(__dirname, 'accounts.json');
+const ACCOUNTS_PATH = path.join(DATA_DIR, 'accounts.json');
 let accounts = [];
 
 function loadAccounts() {
@@ -122,7 +145,7 @@ function saveAccounts() {
 loadAccounts();
 
 /* ─── Quiz History Persistence ─── */
-const HISTORY_PATH = path.join(__dirname, 'game_history.json');
+const HISTORY_PATH = path.join(DATA_DIR, 'game_history.json');
 let gameHistory = [];
 
 function loadGameHistory() {
