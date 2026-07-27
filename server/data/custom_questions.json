@@ -1,163 +1,643 @@
 [
   {
-    "id": "set_20260728",
-    "name": "28/07/2026",
+    "id": "set_festival_food",
+    "name": "Festivals & Food",
     "questions": [
       {
-        "format": "Trivia",
+        "correct": 0,
         "country": "India",
-        "prompt": "During Diwali, which sweet is traditionally prepared?",
-        "options": ["Ladoo", "Gulab Jamun", "Barfi", "Jalebi"],
-        "correct": 0,
-        "explain": "Ladoo, made from flour, sugar and ghee, is a classic Diwali sweet across India."
+        "explain": "Ladoo, made from flour, sugar and ghee, is the classic Diwali sweet prepared in almost every Indian home.",
+        "format": "Trivia",
+        "options": [
+          "Ladoo",
+          "Gulab Jamun",
+          "Jalebi",
+          "Rasgulla"
+        ],
+        "prompt": "Which sweet is most traditionally made across India during Diwali?"
       },
       {
-        "format": "Trivia",
-        "country": "Mauritius",
-        "prompt": "What popular Mauritian dish is often served during Eid?",
-        "options": ["Biryani", "Dholl Puri", "Rougaille", "Samosa"],
         "correct": 0,
-        "explain": "Biryani, a fragrant spiced rice dish, is a staple feast for Eid celebrations in Mauritius."
-      },
-      {
-        "format": "Trivia",
-        "country": "Mauritius",
-        "prompt": "How do you say ‘thank you’ in Mauritian Creole?",
-        "options": ["Mersi", "Merci", "Grazie", "Thankyou"],
-        "correct": 0,
-        "explain": "‘Mersi’ is the common Creole expression of gratitude."
-      },
-      {
-        "format": "Trivia",
         "country": "India",
-        "prompt": "What does the Gujarati phrase ‘Kem cho?’ mean?",
-        "options": ["How are you?", "What is this?", "Good morning", "See you later"],
-        "correct": 0,
-        "explain": "‘Kem cho?’ is a friendly greeting meaning ‘How are you?’"
+        "explain": "Uttarayan, held on 14 January, is when Gujaratis fill the sky with kites to celebrate the winter solstice turning into longer days.",
+        "format": "Trivia",
+        "options": [
+          "Uttarayan (Makar Sankranti)",
+          "Diwali",
+          "Navratri",
+          "Holi"
+        ],
+        "prompt": "Which festival in India is celebrated by flying colourful kites, especially in Gujarat?"
       },
       {
-        "format": "Trivia",
+        "correct": 0,
         "country": "India",
-        "prompt": "Which garment is traditionally worn by women in Gujarat during festivals?",
-        "options": ["Lehenga", "Saree", "Salwar Kameez", "Kurti"],
-        "correct": 0,
-        "explain": "The lehenga, a heavily embroidered skirt, is a hallmark of Gujarati festive attire."
+        "explain": "Gujia is a deep-fried pastry stuffed with khoya and dry fruits — the definitive Holi treat across North and Central India.",
+        "format": "Trivia",
+        "options": [
+          "Gujia",
+          "Barfi",
+          "Halwa",
+          "Puran Poli"
+        ],
+        "prompt": "What special sweet pastry is associated with the Indian festival of Holi?"
       },
       {
-        "format": "Trivia",
-        "country": "Mauritius",
-        "prompt": "What traditional headwear is worn by Creole women on special occasions?",
-        "options": ["Mokoto headscarf", "Boonie hat", "Turban", "None"],
         "correct": 0,
-        "explain": "The Mokoto headscarf is a colourful traditional accessory for Creole women."
+        "country": "India",
+        "explain": "Pongal, the Tamil harvest festival, takes its name from the sweet rice dish cooked in a clay pot with jaggery and milk until it overflows — symbolising abundance.",
+        "format": "Trivia",
+        "options": [
+          "Pongal",
+          "Baisakhi",
+          "Onam",
+          "Ugadi"
+        ],
+        "prompt": "Which harvest festival of South India centres on cooking a sweet rice dish called \"Pongal\"?"
+      },
+      {
+        "correct": 0,
+        "country": "India",
+        "explain": "Biryani, layered with spiced meat and saffron rice, is the centrepiece of Eid feasts across India.",
+        "format": "Trivia",
+        "options": [
+          "Biryani",
+          "Dosa",
+          "Khichdi",
+          "Puri"
+        ],
+        "prompt": "During Eid celebrations in India, which fragrant rice dish is a must-have feast?"
+      },
+      {
+        "correct": 0,
+        "country": "India",
+        "explain": "Garba, performed in circles around an earthen lamp or image of the Goddess, is the soul of Navratri in Gujarat.",
+        "format": "Trivia",
+        "options": [
+          "Garba",
+          "Kathak",
+          "Bharatanatyam",
+          "Bhangra"
+        ],
+        "prompt": "Navratri is a nine-night festival in Gujarat celebrated primarily with which dance form?"
+      },
+      {
+        "correct": 0,
+        "country": "India",
+        "explain": "Bestu Varas (also called \"Nutan Varshabhinandan\") is the Gujarati New Year, falling on the first day of Kartik — the day after Diwali.",
+        "format": "Trivia",
+        "options": [
+          "Bestu Varas",
+          "Ugadi",
+          "Gudi Padwa",
+          "Vishu"
+        ],
+        "prompt": "Which festival marks the Hindu New Year in Gujarat and is celebrated the day after Diwali?"
+      },
+      {
+        "correct": 0,
+        "country": "India",
+        "explain": "Holi, celebrated on the full moon of Phalguna, marks the triumph of good over evil and the arrival of spring with vibrant colours.",
+        "format": "Trivia",
+        "options": [
+          "Holi",
+          "Diwali",
+          "Pongal",
+          "Navratri"
+        ],
+        "prompt": "Which festival is known as the \"Festival of Colours\" and signals the arrival of spring?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "Dholl Puri — a thin flatbread stuffed with curried yellow split peas — is considered the unofficial national street food of Mauritius.",
+        "format": "Trivia",
+        "options": [
+          "Dholl Puri",
+          "Biryani",
+          "Rougaille",
+          "Samosa"
+        ],
+        "prompt": "What is the most popular street food in Mauritius, often called a national favourite?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "Maha Shivaratri at Grand Bassin is one of the largest Hindu pilgrimages outside India — thousands walk barefoot to collect sacred water for Lord Shiva.",
+        "format": "Trivia",
+        "options": [
+          "Maha Shivaratri",
+          "Diwali",
+          "Holi",
+          "Ganesh Chaturthi"
+        ],
+        "prompt": "Which major Hindu festival involves a barefoot pilgrimage to Grand Bassin lake in Mauritius?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "Rougaille is a fragrant, garlicky tomato sauce cooked with fish, chicken or sausage — the heart of everyday Mauritian Creole cooking.",
+        "format": "Trivia",
+        "options": [
+          "Rougaille",
+          "Dholl Puri",
+          "Vindaye",
+          "Daube"
+        ],
+        "prompt": "Which Creole tomato-based stew is a staple of Mauritian family gatherings, served over rice?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "The Kreol Festival (Festival Kreol) is a week-long celebration of Creole culture held in October, with Sega music, art, and traditional food at its heart.",
+        "format": "Trivia",
+        "options": [
+          "Kreol Festival",
+          "Diwali",
+          "Eid",
+          "Chinese Spring Festival"
+        ],
+        "prompt": "Which Mauritian festival celebrates Creole heritage with traditional music, dance, and food every October?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "Cavadee (Thai Pusam) is celebrated in January–February; devotees carry heavy, decorated Kavadi frames and pierce their bodies as an act of devotion to Lord Murugan.",
+        "format": "Trivia",
+        "options": [
+          "Cavadee (Thai Pusam)",
+          "Maha Shivaratri",
+          "Diwali",
+          "Holi"
+        ],
+        "prompt": "During which Mauritian Hindu festival do devotees carry an ornamental arch called a \"Kavadi\"?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "Gateau Patate is a unique Mauritian sweet made from mashed sweet potato, coconut, and sugar — a local Diwali delicacy not found in India.",
+        "format": "Trivia",
+        "options": [
+          "Gateau Patate",
+          "Ladoo",
+          "Barfi",
+          "Halwa"
+        ],
+        "prompt": "What sweet cake made from sweet potato is traditionally prepared in Mauritius during Diwali?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "Vindaye (from the Portuguese \"vinha d'alhos\") is a mustard-and-turmeric marinated fish pickle — a beloved Mauritian festive dish.",
+        "format": "Trivia",
+        "options": [
+          "Vindaye of Fish",
+          "Rougaille",
+          "Daube",
+          "Dholl Puri"
+        ],
+        "prompt": "Which pickled fish dish is a Mauritian speciality often enjoyed at festivals and celebrations?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "Mauritius's multi-ethnic heritage means Chinese New Year (Nouvel An Chinois) is a public holiday celebrated island-wide with lion dances, firecrackers, and traditional foods.",
+        "format": "Trivia",
+        "options": [
+          "Chinese Spring Festival (Nouvel An Chinois)",
+          "Kreol Festival",
+          "Cavadee",
+          "Eid"
+        ],
+        "prompt": "Which Chinese-origin festival is also widely celebrated in Mauritius with lion dances and fireworks?"
       }
     ]
   },
   {
-    "id": "set_20260730",
-    "name": "30/07/2026",
+    "id": "set_languages",
+    "name": "Languages",
     "questions": [
       {
-        "format": "Trivia",
-        "country": "India",
-        "prompt": "Which sweet pastry is associated with the Indian festival of Holi?",
-        "options": ["Gujia", "Barfi", "Ladoo", "Rasgulla"],
         "correct": 0,
-        "explain": "Gujia (deep‑fried stuffed pastry) is a classic Holi treat."
-      },
-      {
-        "format": "Trivia",
         "country": "Mauritius",
-        "prompt": "Which street food is considered a national favourite in Mauritius?",
-        "options": ["Dholl Puri", "Biryani", "Pizza", "Tacos"],
-        "correct": 0,
-        "explain": "Dholl Puri, a flatbread filled with curried split peas, is a beloved Mauritian snack."
+        "explain": "\"Bonzur\" is the Creole adaptation of the French \"Bonjour\" — the everyday greeting used morning or afternoon across Mauritius.",
+        "format": "Trivia",
+        "options": [
+          "Bonzur",
+          "Bonjour",
+          "Allo",
+          "Salam"
+        ],
+        "prompt": "How do you say \"Hello / Good morning\" in Mauritian Creole?"
       },
       {
-        "format": "Trivia",
+        "correct": 0,
         "country": "Mauritius",
-        "prompt": "How do you say ‘good morning’ in Mauritian Creole?",
-        "options": ["Bonzur", "Bonjour", "Bonswa", "Moin bon"],
-        "correct": 0,
-        "explain": "‘Bonzur’ is the Creole greeting for ‘good morning’."
+        "explain": "\"Mersi\" comes from the French \"Merci\" and is the standard way to express gratitude in Mauritian Creole.",
+        "format": "Trivia",
+        "options": [
+          "Mersi",
+          "Tanpri",
+          "Padon",
+          "Silvouplé"
+        ],
+        "prompt": "How do you say \"Thank you\" in Mauritian Creole?"
       },
       {
-        "format": "Trivia",
-        "country": "India",
-        "prompt": "What does the Gujarati expression ‘Saachu chu?’ convey?",
-        "options": ["I am true/indeed", "I am tired", "I am hungry", "I am leaving"],
         "correct": 0,
-        "explain": "‘Saachu chu?’ literally means ‘Am I right?’, used to confirm a statement."
-      },
-      {
-        "format": "Trivia",
-        "country": "India",
-        "prompt": "During the festival of Navratri, which traditional clothing is often worn by participants in Gujarat?",
-        "options": ["Chaniya Choli", "Lehenga", "Saree", "Dhoti"],
-        "correct": 0,
-        "explain": "Women typically wear the colorful Chaniya Choli for Garba dances."
-      },
-      {
-        "format": "Trivia",
         "country": "Mauritius",
-        "prompt": "What traditional attire is worn by Mauritian Creole men during cultural celebrations?",
-        "options": ["Shirt and Chino trousers with a headscarf", "Kurta‑pyjama", "Barong", "Kilt"],
+        "explain": "\"Bonswa\" (from French \"Bonsoir\") is used as a greeting in the evening throughout Mauritius.",
+        "format": "Trivia",
+        "options": [
+          "Bonswa",
+          "Bonzur",
+          "Bonne nuit",
+          "Bon matin"
+        ],
+        "prompt": "How do you say \"Good evening\" in Mauritian Creole?"
+      },
+      {
         "correct": 0,
-        "explain": "A smart shirt with chinos and sometimes a decorative headscarf (Mokoto) is common for men."
+        "country": "Mauritius",
+        "explain": "\"Ki manyer?\" literally means \"In what manner (are you)?\" — the standard Creole way of asking \"How are you?\"",
+        "format": "Trivia",
+        "options": [
+          "How are you?",
+          "What is your name?",
+          "Where are you going?",
+          "What time is it?"
+        ],
+        "prompt": "What does the Creole phrase \"Ki manyer?\" mean?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "\"Silvouplé\" (from French \"S'il vous plaît\") means \"please\" and is used when making a polite request in Creole.",
+        "format": "Trivia",
+        "options": [
+          "Silvouplé",
+          "Mersi",
+          "Padon",
+          "Bonzur"
+        ],
+        "prompt": "How do you say \"Please\" in Mauritian Creole?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "\"Padon\" (from French \"Pardon\") is used to apologise or get someone's attention politely in Mauritian Creole.",
+        "format": "Trivia",
+        "options": [
+          "Padon",
+          "Mersi",
+          "Silvouplé",
+          "Tanpri"
+        ],
+        "prompt": "How do you say \"Sorry / Excuse me\" in Mauritian Creole?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "\"Mo pa konpran\" (literally \"I not understand\") is the Creole phrase for \"I don't understand.\"",
+        "format": "Trivia",
+        "options": [
+          "Mo pa konpran",
+          "Mo pa kone",
+          "Mo pa la",
+          "Mo pa kapav"
+        ],
+        "prompt": "How do you say \"I don't understand\" in Mauritian Creole?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "\"Ayo!\" is a universal Creole exclamation used to express shock, surprise, or mild pain — very common in everyday Mauritian speech.",
+        "format": "Trivia",
+        "options": [
+          "An exclamation of surprise or pain",
+          "A greeting",
+          "A farewell",
+          "A question word"
+        ],
+        "prompt": "What does \"Ayo!\" express in Mauritian Creole?"
+      },
+      {
+        "correct": 0,
+        "country": "India",
+        "explain": "\"Kem cho?\" is the quintessential Gujarati greeting meaning \"How are you?\" — used casually with friends and family.",
+        "format": "Trivia",
+        "options": [
+          "How are you?",
+          "Good morning",
+          "What is your name?",
+          "Where are you going?"
+        ],
+        "prompt": "What does the Gujarati greeting \"Kem cho?\" mean?"
+      },
+      {
+        "correct": 0,
+        "country": "India",
+        "explain": "\"Maja ma\" is the cheerful Gujarati reply to \"Kem cho?\" meaning \"I'm great / enjoying life!\"",
+        "format": "Trivia",
+        "options": [
+          "I am fine / All good",
+          "I am hungry",
+          "Good night",
+          "Come here"
+        ],
+        "prompt": "What does \"Maja ma\" mean in Gujarati?"
+      },
+      {
+        "correct": 0,
+        "country": "India",
+        "explain": "\"Aavjo\" literally means \"Please come again\" and is the warm Gujarati way of saying goodbye, implying you'd like to meet again.",
+        "format": "Trivia",
+        "options": [
+          "Aavjo",
+          "Avo",
+          "Jaao",
+          "Che"
+        ],
+        "prompt": "How do you say \"Goodbye\" in Gujarati?"
+      },
+      {
+        "correct": 0,
+        "country": "India",
+        "explain": "\"Tamaru naam shu che?\" — \"Tamaru\" (your), \"naam\" (name), \"shu che?\" (what is?) — is how you ask someone's name politely in Gujarati.",
+        "format": "Trivia",
+        "options": [
+          "What is your name?",
+          "How are you?",
+          "Where are you from?",
+          "How old are you?"
+        ],
+        "prompt": "What does \"Tamaru naam shu che?\" mean in Gujarati?"
+      },
+      {
+        "correct": 0,
+        "country": "India",
+        "explain": "\"Dhanyavaad\" is the formal Gujarati (and Sanskrit-origin) word for \"Thank you\" — used in respectful or formal contexts.",
+        "format": "Trivia",
+        "options": [
+          "Thank you",
+          "Goodbye",
+          "You're welcome",
+          "Sorry"
+        ],
+        "prompt": "What does \"Dhanyavaad\" mean in Gujarati?"
+      },
+      {
+        "correct": 0,
+        "country": "India",
+        "explain": "\"Hosh ma rahejo\" — literally \"Stay in your senses\" — is a warm Gujarati way of saying \"Take care of yourself.\"",
+        "format": "Trivia",
+        "options": [
+          "Take care of yourself",
+          "Come back soon",
+          "Good morning",
+          "Eat well"
+        ],
+        "prompt": "What does the Gujarati phrase \"Hosh ma rahejo\" mean?"
+      },
+      {
+        "correct": 0,
+        "country": "India",
+        "explain": "\"Saachu che?\" means \"Is that true?\" or \"Really?\" and is used to confirm or express mild surprise in Gujarati conversation.",
+        "format": "Trivia",
+        "options": [
+          "Is it true? / Really?",
+          "Are you okay?",
+          "What is this?",
+          "Where is it?"
+        ],
+        "prompt": "What does \"Saachu che?\" mean in Gujarati?"
+      },
+      {
+        "correct": 0,
+        "country": "India",
+        "explain": "\"Barabar che\" means \"That's correct\" or \"It's fine / alright\" — a versatile phrase used to affirm or agree in Gujarati.",
+        "format": "Trivia",
+        "options": [
+          "That's correct / It's alright",
+          "It's very bad",
+          "I don't know",
+          "That's enough"
+        ],
+        "prompt": "What does \"Barabar che\" mean in Gujarati?"
       }
     ]
   },
   {
-    "id": "set_20260801",
-    "name": "01/08/2026",
+    "id": "set_clothing_traditions",
+    "name": "Clothing & Traditions",
     "questions": [
       {
-        "format": "Trivia",
+        "correct": 0,
         "country": "India",
-        "prompt": "Which festive sweet is traditionally prepared for the Indian celebration of Pongal?",
-        "options": ["Sweet rice (Pongal) with jaggery", "Ladoo", "Kheer", "Gulab Jamun"],
-        "correct": 0,
-        "explain": "Sweet rice Pongal, made with rice, milk and jaggery, marks the harvest festival."
+        "explain": "The Chaniya Choli (a flared skirt paired with a short blouse) is the signature Navratri outfit in Gujarat, embellished with mirror-work and vibrant embroidery.",
+        "format": "Trivia",
+        "options": [
+          "Chaniya Choli",
+          "Saree",
+          "Salwar Kameez",
+          "Anarkali"
+        ],
+        "prompt": "Which colourful two-piece outfit is worn by women in Gujarat during Navratri for Garba?"
       },
       {
-        "format": "Trivia",
-        "country": "Mauritius",
-        "prompt": "Which Mauritian dish pairs rice with a spicy tomato‑based sauce and is often enjoyed at family gatherings?",
-        "options": ["Rougaille", "Curry", "Biryani", "Dholl Puri"],
         "correct": 0,
-        "explain": "Rougaille, a Creole tomato stew, is a staple served with rice during gatherings."
-      },
-      {
-        "format": "Trivia",
-        "country": "Mauritius",
-        "prompt": "What is the Creole phrase for ‘how are you?’",
-        "options": ["Ki manyer?", "Komansey?", "Sak pase?", "Bonzur"],
-        "correct": 0,
-        "explain": "‘Ki manyer?’ directly translates to ‘how are you?’ in Mauritian Creole."
-      },
-      {
-        "format": "Trivia",
         "country": "India",
-        "prompt": "In Gujarati, what does the word ‘bhav’ mean in the context of a greeting?",
-        "options": ["Feelings", "Price", "Blessings", "Friend"],
-        "correct": 2,
-        "explain": "‘bhav’ in greetings conveys ‘blessings’ or ‘good wishes’."
+        "explain": "Kutchi embroidery from the Kutch region of Gujarat is known for its tiny mirrors (abhla bharat) sewn into colourful geometric designs — a UNESCO-recognised craft.",
+        "format": "Trivia",
+        "options": [
+          "Kutchi embroidery",
+          "Phulkari",
+          "Chikankari",
+          "Zardozi"
+        ],
+        "prompt": "Which embroidery style from Gujarat is famous for its intricate mirror work and colourful patterns?"
       },
       {
-        "format": "Trivia",
+        "correct": 0,
         "country": "India",
-        "prompt": "Which attire is traditionally worn by men in Gujarat during the kite‑flying festival Uttarayan?",
-        "options": ["Kurta with dhoti", "Sherwani", "Lehenga", "Jodhpuri suit"],
-        "correct": 0,
-        "explain": "Men typically sport a white kurta paired with a draped dhoti for comfort during the festivities."
+        "explain": "Bandhani is created by tying tiny points of fabric with thread before dyeing, producing distinctive dot patterns in vibrant colours — a hallmark of Gujarati textile heritage.",
+        "format": "Trivia",
+        "options": [
+          "A tie-dye fabric with small dot patterns",
+          "A type of silk weaving",
+          "A block-printed cotton",
+          "A type of embroidery"
+        ],
+        "prompt": "What is \"Bandhani\", the traditional fabric famous in Gujarat and Rajasthan?"
       },
       {
-        "format": "Trivia",
-        "country": "Mauritius",
-        "prompt": "During the Mauritian celebration of ‘Maha Shivaratri’, which traditional garment is commonly worn?",
-        "options": ["White dhoti", "Red sari", "Kasavu", "Barong"],
         "correct": 0,
-        "explain": "A simple white dhoti is customary for devotees observing Maha Shivaratri."
+        "country": "India",
+        "explain": "The Mangalsutra is a gold-and-black-bead necklace tied by the groom around the bride's neck during the Hindu wedding ceremony — a symbol of their union and her married status.",
+        "format": "Trivia",
+        "options": [
+          "A sacred necklace worn by married women",
+          "A wedding ring",
+          "A head ornament for brides",
+          "A ceremonial bracelet"
+        ],
+        "prompt": "What is the significance of the \"Mangalsutra\" in Hindu tradition?"
+      },
+      {
+        "correct": 0,
+        "country": "India",
+        "explain": "The Saree is 5–9 metres of unstitched fabric that is draped in dozens of regional styles — one of the world's oldest garments, still worn daily by millions of Indian women.",
+        "format": "Trivia",
+        "options": [
+          "Saree",
+          "Lehenga",
+          "Salwar Kameez",
+          "Churidar"
+        ],
+        "prompt": "What traditional garment is a single unstitched piece of fabric draped elegantly around the body?"
+      },
+      {
+        "correct": 0,
+        "country": "India",
+        "explain": "Mojari are hand-crafted leather shoes with a curled-up toe, embroidered in gold or coloured thread — an artisan tradition of Rajasthan and Gujarat.",
+        "format": "Trivia",
+        "options": [
+          "Mojari",
+          "Kolhapuri",
+          "Chappal",
+          "Paduka"
+        ],
+        "prompt": "What is the traditional embroidered leather footwear associated with Gujarati and Rajasthani culture?"
+      },
+      {
+        "correct": 0,
+        "country": "India",
+        "explain": "Mehndi application is an integral part of Indian weddings (especially for the bride) and festivals such as Eid, Diwali, and Teej.",
+        "format": "Trivia",
+        "options": [
+          "Weddings and festivals like Eid & Teej",
+          "Funerals",
+          "Job interviews",
+          "Sports events"
+        ],
+        "prompt": "On which occasion is applying Mehndi (henna) most traditionally practiced in India?"
+      },
+      {
+        "correct": 0,
+        "country": "India",
+        "explain": "The Haldi ceremony involves applying a paste of turmeric, sandalwood, and rosewater to the bride's and groom's skin to cleanse and beautify them before the wedding.",
+        "format": "Trivia",
+        "options": [
+          "A turmeric paste applied to the bride and groom before the wedding",
+          "A post-wedding feast",
+          "A dowry exchange ritual",
+          "A flower garland ceremony"
+        ],
+        "prompt": "In Gujarati wedding tradition, what is \"Haldi\" ceremony?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "The Mokoto is a brightly coloured headscarf that is a symbol of Creole feminine identity in Mauritius, often worn during the Kreol Festival and cultural celebrations.",
+        "format": "Trivia",
+        "options": [
+          "Mokoto",
+          "Turban",
+          "Hijab",
+          "Dupatta"
+        ],
+        "prompt": "What is the traditional headscarf worn by Mauritian Creole women on special occasions called?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "Sega is Mauritius's national dance and music genre — born from the cultural blending of African, Malagasy, and European traditions, it features hip-swaying movements to the beat of the Ravanne drum.",
+        "format": "Trivia",
+        "options": [
+          "Sega",
+          "Moutia",
+          "Séga tambour",
+          "Maloya"
+        ],
+        "prompt": "What is the name of the traditional Creole dance of Mauritius, performed to drumbeats?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "The Ravanne is a round frame drum made from goatskin. Heated over fire to tighten its skin before playing, it produces the distinctive heartbeat of Sega music.",
+        "format": "Trivia",
+        "options": [
+          "Ravanne (goatskin drum)",
+          "Tabla",
+          "Djembe",
+          "Tambourine"
+        ],
+        "prompt": "Which drum instrument is central to the traditional Sega music of Mauritius?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "Pilgrims wear plain white during Maha Shivaratri as a symbol of purity and devotion to Lord Shiva during the night-long vigil and barefoot walk to Grand Bassin.",
+        "format": "Trivia",
+        "options": [
+          "White",
+          "Red",
+          "Saffron / Orange",
+          "Yellow"
+        ],
+        "prompt": "What colour do Hindu devotees traditionally wear during the Maha Shivaratri pilgrimage in Mauritius?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "The Saree — worn in the South Indian style — is the traditional attire for Hindu women in Mauritius attending religious ceremonies and festive occasions.",
+        "format": "Trivia",
+        "options": [
+          "Saree",
+          "Lehenga",
+          "Chaniya Choli",
+          "Kurti"
+        ],
+        "prompt": "Which garment brought from India is commonly worn by Hindu women in Mauritius at temples and festivals?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "Mauritius is world-famous for its handcrafted ship-in-bottle models — artisans build intricate replicas of historic sailing ships (like the HMS Victory) inside glass bottles.",
+        "format": "Trivia",
+        "options": [
+          "Ship-in-bottle model making",
+          "Rattan basket weaving",
+          "Pottery",
+          "Wood carving"
+        ],
+        "prompt": "What is Mauritius's renowned artisan craft involving building miniature replica ships in glass bottles?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "The Ti-dite is a traditional Mauritian Creole ceremony where an elder formally bathes and names the newborn baby, welcoming them into the family and community.",
+        "format": "Trivia",
+        "options": [
+          "Ti-dite ceremony (first bath ritual)",
+          "Baptism",
+          "Annaprasana",
+          "Cradle night"
+        ],
+        "prompt": "What is the traditional Mauritian blessing ceremony called, where a newborn is formally welcomed into the family?"
+      },
+      {
+        "correct": 0,
+        "country": "Mauritius",
+        "explain": "The Cotillon is a traditional Creole dress — a long, colourful floral-patterned skirt worn with a lace-trimmed blouse, often paired with the Mokoto headscarf for festivals.",
+        "format": "Trivia",
+        "options": [
+          "Cotillon (Creole dress)",
+          "Sari",
+          "Kaftan",
+          "Dashiki"
+        ],
+        "prompt": "What is the name of the traditional Mauritian Creole women's dress characterised by floral prints and lace trim?"
       }
     ]
   }
