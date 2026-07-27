@@ -1,0 +1,164 @@
+[
+  {
+    "id": "set_20260728",
+    "name": "28/07/2026",
+    "questions": [
+      {
+        "format": "Trivia",
+        "country": "India",
+        "prompt": "During Diwali, which sweet is traditionally prepared?",
+        "options": ["Ladoo", "Gulab Jamun", "Barfi", "Jalebi"],
+        "correct": 0,
+        "explain": "Ladoo, made from flour, sugar and ghee, is a classic Diwali sweet across India."
+      },
+      {
+        "format": "Trivia",
+        "country": "Mauritius",
+        "prompt": "What popular Mauritian dish is often served during Eid?",
+        "options": ["Biryani", "Dholl Puri", "Rougaille", "Samosa"],
+        "correct": 0,
+        "explain": "Biryani, a fragrant spiced rice dish, is a staple feast for Eid celebrations in Mauritius."
+      },
+      {
+        "format": "Trivia",
+        "country": "Mauritius",
+        "prompt": "How do you say ‘thank you’ in Mauritian Creole?",
+        "options": ["Mersi", "Merci", "Grazie", "Thankyou"],
+        "correct": 0,
+        "explain": "‘Mersi’ is the common Creole expression of gratitude."
+      },
+      {
+        "format": "Trivia",
+        "country": "India",
+        "prompt": "What does the Gujarati phrase ‘Kem cho?’ mean?",
+        "options": ["How are you?", "What is this?", "Good morning", "See you later"],
+        "correct": 0,
+        "explain": "‘Kem cho?’ is a friendly greeting meaning ‘How are you?’"
+      },
+      {
+        "format": "Trivia",
+        "country": "India",
+        "prompt": "Which garment is traditionally worn by women in Gujarat during festivals?",
+        "options": ["Lehenga", "Saree", "Salwar Kameez", "Kurti"],
+        "correct": 0,
+        "explain": "The lehenga, a heavily embroidered skirt, is a hallmark of Gujarati festive attire."
+      },
+      {
+        "format": "Trivia",
+        "country": "Mauritius",
+        "prompt": "What traditional headwear is worn by Creole women on special occasions?",
+        "options": ["Mokoto headscarf", "Boonie hat", "Turban", "None"],
+        "correct": 0,
+        "explain": "The Mokoto headscarf is a colourful traditional accessory for Creole women."
+      }
+    ]
+  },
+  {
+    "id": "set_20260730",
+    "name": "30/07/2026",
+    "questions": [
+      {
+        "format": "Trivia",
+        "country": "India",
+        "prompt": "Which sweet pastry is associated with the Indian festival of Holi?",
+        "options": ["Gujia", "Barfi", "Ladoo", "Rasgulla"],
+        "correct": 0,
+        "explain": "Gujia (deep‑fried stuffed pastry) is a classic Holi treat."
+      },
+      {
+        "format": "Trivia",
+        "country": "Mauritius",
+        "prompt": "Which street food is considered a national favourite in Mauritius?",
+        "options": ["Dholl Puri", "Biryani", "Pizza", "Tacos"],
+        "correct": 0,
+        "explain": "Dholl Puri, a flatbread filled with curried split peas, is a beloved Mauritian snack."
+      },
+      {
+        "format": "Trivia",
+        "country": "Mauritius",
+        "prompt": "How do you say ‘good morning’ in Mauritian Creole?",
+        "options": ["Bonzur", "Bonjour", "Bonswa", "Moin bon"],
+        "correct": 0,
+        "explain": "‘Bonzur’ is the Creole greeting for ‘good morning’."
+      },
+      {
+        "format": "Trivia",
+        "country": "India",
+        "prompt": "What does the Gujarati expression ‘Saachu chu?’ convey?",
+        "options": ["I am true/indeed", "I am tired", "I am hungry", "I am leaving"],
+        "correct": 0,
+        "explain": "‘Saachu chu?’ literally means ‘Am I right?’, used to confirm a statement."
+      },
+      {
+        "format": "Trivia",
+        "country": "India",
+        "prompt": "During the festival of Navratri, which traditional clothing is often worn by participants in Gujarat?",
+        "options": ["Chaniya Choli", "Lehenga", "Saree", "Dhoti"],
+        "correct": 0,
+        "explain": "Women typically wear the colorful Chaniya Choli for Garba dances."
+      },
+      {
+        "format": "Trivia",
+        "country": "Mauritius",
+        "prompt": "What traditional attire is worn by Mauritian Creole men during cultural celebrations?",
+        "options": ["Shirt and Chino trousers with a headscarf", "Kurta‑pyjama", "Barong", "Kilt"],
+        "correct": 0,
+        "explain": "A smart shirt with chinos and sometimes a decorative headscarf (Mokoto) is common for men."
+      }
+    ]
+  },
+  {
+    "id": "set_20260801",
+    "name": "01/08/2026",
+    "questions": [
+      {
+        "format": "Trivia",
+        "country": "India",
+        "prompt": "Which festive sweet is traditionally prepared for the Indian celebration of Pongal?",
+        "options": ["Sweet rice (Pongal) with jaggery", "Ladoo", "Kheer", "Gulab Jamun"],
+        "correct": 0,
+        "explain": "Sweet rice Pongal, made with rice, milk and jaggery, marks the harvest festival."
+      },
+      {
+        "format": "Trivia",
+        "country": "Mauritius",
+        "prompt": "Which Mauritian dish pairs rice with a spicy tomato‑based sauce and is often enjoyed at family gatherings?",
+        "options": ["Rougaille", "Curry", "Biryani", "Dholl Puri"],
+        "correct": 0,
+        "explain": "Rougaille, a Creole tomato stew, is a staple served with rice during gatherings."
+      },
+      {
+        "format": "Trivia",
+        "country": "Mauritius",
+        "prompt": "What is the Creole phrase for ‘how are you?’",
+        "options": ["Ki manyer?", "Komansey?", "Sak pase?", "Bonzur"],
+        "correct": 0,
+        "explain": "‘Ki manyer?’ directly translates to ‘how are you?’ in Mauritian Creole."
+      },
+      {
+        "format": "Trivia",
+        "country": "India",
+        "prompt": "In Gujarati, what does the word ‘bhav’ mean in the context of a greeting?",
+        "options": ["Feelings", "Price", "Blessings", "Friend"],
+        "correct": 2,
+        "explain": "‘Bhav’ in greetings conveys ‘blessings’ or ‘good wishes’."
+      },
+      {
+        "format": "Trivia",
+        "country": "India",
+        "prompt": "Which attire is traditionally worn by men in Gujarat during the kite‑flying festival Uttarayan?",
+        "options": ["Kurta with dhoti", "Sherwani", "Lehenga", "Jodhpuri suit"],
+        "correct": 0,
+        "explain": "Men typically sport a white kurta paired with a draped dhoti for comfort during the festivities."
+      },
+      {
+        "format": "Trivia",
+        "country": "Mauritius",
+        "prompt": "During the Mauritian celebration of ‘Maha Shivaratri’, which traditional garment is commonly worn?",
+        "options": ["White dhoti", "Red sari", "Kasavu", "Barong"],
+        "correct": 0,
+        "explain": "A simple white dhoti is customary for devotees observing Maha Shivaratri."
+      }
+    ]
+  }
+]

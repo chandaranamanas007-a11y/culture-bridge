@@ -3,11 +3,19 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import fs from 'fs';
-import googleDriveClient from './googleDriveClient.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { questions as defaultQuestions } from './default_questions.js';
 import dotenv from 'dotenv';
+import {
+  loadQuestionSetsFromDB,
+  saveQuestionSetsToDB,
+  loadAccountsFromDB,
+  saveAccountsToDB,
+  loadGameHistoryFromDB,
+  addGameHistoryToDB,
+} from './firebaseRest.js';
+
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -53,163 +61,128 @@ const rooms = {};
 
 const QUESTION_TIME_LIMIT = 20; // seconds
 
-/* ─── Question Sets & Data Persistence Directory ─── */
+/* ─── Local seed file paths (fallback for local dev without Firebase) ─── */
 const DATA_DIR = path.join(__dirname, 'data');
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
-
-// Auto-migration helper for existing files
-const migrateFile = (oldName, newName) => {
-  const oldPath = path.join(__dirname, oldName);
-  const newPath = path.join(DATA_DIR, newName);
-  if (fs.existsSync(oldPath) && !fs.existsSync(newPath)) {
-    try {
-      fs.renameSync(oldPath, newPath);
-      console.log(`✓ Migrated ${oldName} to data/${newName}`);
-    } catch (e) {
-      console.error(`Failed to migrate ${oldName}:`, e);
-    }
-  }
-};
-
-migrateFile('custom_questions.json', 'custom_questions.json');
-migrateFile('accounts.json', 'accounts.json');
-migrateFile('game_history.json', 'game_history.json');
-
 const QUESTION_SETS_PATH = path.join(DATA_DIR, 'custom_questions.json');
-let questionSets = [];
+const ACCOUNTS_PATH = path.join(DATA_DIR, 'accounts.json');
 
 function makeSetId() {
   return 'set_' + Math.random().toString(36).substring(2, 10);
 }
 
+/* ─── Question Sets ─── */
+let questionSets = [];
+
 async function loadQuestionSets() {
   try {
-    // Prefer Drive data if available
-    if (process.env.GOOGLE_DRIVE_FOLDER_ID) {
-      const remote = await googleDriveClient.readJson('custom_questions.json');
-      if (remote) {
-        questionSets = remote;
-        console.log('✓ Loaded question sets from Google Drive');
-        // Persist locally for faster subsequent loads
-        fs.writeFileSync(QUESTION_SETS_PATH, JSON.stringify(questionSets, null, 2), 'utf8');
-        return;
-      }
+    // 1. Try Firebase first (persistent across all deploys & restarts)
+    const remote = await loadQuestionSetsFromDB();
+    if (remote && Array.isArray(remote) && remote.length > 0) {
+      questionSets = remote;
+      console.log(`✓ Loaded ${questionSets.length} question set(s) from Firebase`);
+      return;
     }
-    // Fallback to local file
+
+    // 2. Fallback: local file (seed data committed to git)
     if (fs.existsSync(QUESTION_SETS_PATH)) {
-      const data = JSON.parse(fs.readFileSync(QUESTION_SETS_PATH, 'utf8'));
-      if (!Array.isArray(data)) {
-        // Migrate old format
-        questionSets = [];
-        if (data.default && data.default.length > 0)
-          questionSets.push({ id: 'set_default', name: 'Default Bank', questions: data.default });
-        if (data.mauritius && data.mauritius.length > 0)
-          questionSets.push({ id: 'set_mauritius', name: 'Mauritius Custom', questions: data.mauritius });
-        if (data.tgswadi && data.tgswadi.length > 0)
-          questionSets.push({ id: 'set_tgswadi', name: 'TGS Wadi Custom', questions: data.tgswadi });
-        saveQuestionSets();
-        console.log('✓ Migrated old question bank to new sets format');
+      const raw = fs.readFileSync(QUESTION_SETS_PATH, 'utf8');
+      const data = JSON.parse(raw);
+      if (Array.isArray(data) && data.length > 0) {
+        questionSets = data;
+        console.log(`✓ Loaded ${questionSets.length} question set(s) from local file – seeding Firebase…`);
+        // Seed Firebase so subsequent deploys use Firebase
+        await saveQuestionSetsToDB(questionSets);
         return;
       }
-      questionSets = data;
     }
-    if (questionSets.length === 0) {
-      questionSets = [{ id: 'set_default', name: 'Default Bank', questions: [...defaultQuestions] }];
-      saveQuestionSets();
-    }
+
+    // 3. Ultimate fallback: built-in default questions
+    questionSets = [{ id: 'set_default', name: 'Default Bank', questions: [...defaultQuestions] }];
+    console.log('✓ Using built-in default question bank');
+    await saveQuestionSetsToDB(questionSets);
   } catch (err) {
     console.error('Error loading question sets:', err);
     questionSets = [{ id: 'set_default', name: 'Default Bank', questions: [...defaultQuestions] }];
   }
 }
 
-
-function saveQuestionSets() {
+async function saveQuestionSets() {
   try {
-    fs.writeFileSync(QUESTION_SETS_PATH, JSON.stringify(questionSets, null, 2), 'utf8');
-    // Also persist to Google Drive (non‑blocking)
-    googleDriveClient.writeJson('custom_questions.json', questionSets).catch(err => {
-      console.error('Error syncing question sets to Google Drive:', err);
-    });
+    // Primary: Firebase (durable)
+    await saveQuestionSetsToDB(questionSets);
+    console.log('✓ Question sets saved to Firebase');
+    // Also write local file for debugging convenience
+    try {
+      fs.writeFileSync(QUESTION_SETS_PATH, JSON.stringify(questionSets, null, 2), 'utf8');
+    } catch (_) { /* non-fatal on Vercel read-only fs */ }
   } catch (err) {
     console.error('Error saving question sets:', err);
   }
 }
 
-loadQuestionSets();
-
 /* ─── Accounts / Sessions ─── */
-const ACCOUNTS_PATH = path.join(DATA_DIR, 'accounts.json');
 let accounts = [];
 
 async function loadAccounts() {
   try {
-    // Try to load from Google Drive first
-    if (process.env.GOOGLE_DRIVE_FOLDER_ID) {
-      const remote = await googleDriveClient.readJson('accounts.json');
-      if (remote) {
-        accounts = remote;
-        console.log('✓ Loaded accounts from Google Drive');
-        // Persist locally for faster future loads
-        fs.writeFileSync(ACCOUNTS_PATH, JSON.stringify(accounts, null, 2), 'utf8');
+    // 1. Try Firebase
+    const remote = await loadAccountsFromDB();
+    if (remote && Array.isArray(remote) && remote.length > 0) {
+      accounts = remote;
+      console.log(`✓ Loaded ${accounts.length} account(s) from Firebase`);
+      return;
+    }
+
+    // 2. Fallback: local seed file
+    if (fs.existsSync(ACCOUNTS_PATH)) {
+      accounts = JSON.parse(fs.readFileSync(ACCOUNTS_PATH, 'utf8'));
+      if (accounts.length > 0) {
+        console.log(`✓ Loaded ${accounts.length} account(s) from local file – seeding Firebase…`);
+        await saveAccountsToDB(accounts);
         return;
       }
     }
-    // Fallback to local file
-    if (fs.existsSync(ACCOUNTS_PATH)) {
-      accounts = JSON.parse(fs.readFileSync(ACCOUNTS_PATH, 'utf8'));
-    }
+
+    // 3. Hard-coded super admin as last resort
+    accounts = [{ id: 'admin', password: 'Interact2026', name: 'Super Admin', role: 'admin' }];
+    console.log('✓ Using default admin account');
+    await saveAccountsToDB(accounts);
   } catch (err) {
     console.error('Error loading accounts:', err);
-    accounts = [];
+    accounts = [{ id: 'admin', password: 'Interact2026', name: 'Super Admin', role: 'admin' }];
   }
 }
 
-
-function saveAccounts() {
+async function saveAccounts() {
   try {
-    fs.writeFileSync(ACCOUNTS_PATH, JSON.stringify(accounts, null, 2), 'utf8');
-    // Also persist to Google Drive (non‑blocking)
-    googleDriveClient.writeJson('accounts.json', accounts).catch(err => {
-      console.error('Error syncing accounts to Google Drive:', err);
-    });
+    await saveAccountsToDB(accounts);
+    console.log('✓ Accounts saved to Firebase');
+    try {
+      fs.writeFileSync(ACCOUNTS_PATH, JSON.stringify(accounts, null, 2), 'utf8');
+    } catch (_) { /* non-fatal */ }
   } catch (err) {
     console.error('Error saving accounts:', err);
   }
 }
 
-loadAccounts();
-
-/* ─── Quiz History Persistence ─── */
-const HISTORY_PATH = path.join(DATA_DIR, 'game_history.json');
+/* ─── Quiz History ─── */
 let gameHistory = [];
 
 async function loadGameHistory() {
   try {
-    // Prefer Drive data if available
-    if (process.env.GOOGLE_DRIVE_FOLDER_ID) {
-      const remote = await googleDriveClient.readJson('game_history.json');
-      if (remote) {
-        gameHistory = remote;
-        console.log('✓ Loaded game history from Google Drive');
-        // Persist locally for faster loads
-        fs.writeFileSync(HISTORY_PATH, JSON.stringify(gameHistory, null, 2), 'utf8');
-        return;
-      }
-    }
-    // Fallback to local file
-    if (fs.existsSync(HISTORY_PATH)) {
-      gameHistory = JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf8'));
-    }
+    const remote = await loadGameHistoryFromDB();
+    gameHistory = remote || [];
+    console.log(`✓ Loaded ${gameHistory.length} game history record(s) from Firebase`);
   } catch (err) {
     console.error('Error loading game history:', err);
     gameHistory = [];
   }
 }
 
-function recordGameHistory(room) {
+async function recordGameHistory(room) {
   try {
     const playersList = Object.values(room.players || {}).map(p => ({
       name: p.name,
@@ -229,24 +202,21 @@ function recordGameHistory(room) {
     gameHistory.unshift(historyRecord);
     if (gameHistory.length > 100) gameHistory = gameHistory.slice(0, 100);
 
-    fs.writeFileSync(HISTORY_PATH, JSON.stringify(gameHistory, null, 2), 'utf8');
-    // Sync to Google Drive (non‑blocking)
-    googleDriveClient.writeJson('game_history.json', gameHistory).catch(err => {
-      console.error('Error syncing game history to Google Drive:', err);
-    });
+    await addGameHistoryToDB(historyRecord);
     console.log(`💾 Saved quiz scores and history for room ${room.code}`);
   } catch (err) {
     console.error('Error recording game history:', err);
   }
 }
 
-loadGameHistory();
-
 const sessions = {}; // token -> user object
 
 function generateToken() {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
+
+/* ─── Startup: load all persistent data ─── */
+await Promise.all([loadQuestionSets(), loadAccounts(), loadGameHistory()]);
 
 /* ─── Game logic helpers ─── */
 function performReveal(code) {
