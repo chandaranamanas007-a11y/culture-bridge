@@ -12,18 +12,6 @@
     "role": "admin"
   },
   {
-    "id": "Ruhi.T",
-    "name": "Ruhi Thakkar",
-    "password": "Mentor@Ruhi.6175",
-    "role": "mentor"
-  },
-  {
-    "id": "Zoya.T",
-    "name": "Zoya Tilala",
-    "password": "Mentor@Zoya.2941",
-    "role": "mentor"
-  },
-  {
     "id": "Taashvi.P",
     "name": "Taashvi Pobaru",
     "password": "Mentor@Taashvi.8392",
@@ -57,6 +45,18 @@
     "id": "Zeal.M",
     "name": "Zeal Maradiya",
     "password": "Mentor@Zeal.7483",
+    "role": "mentor"
+  },
+  {
+    "id": "Ruhi.T",
+    "name": "Ruhi Thakkar",
+    "password": "Mentor@Ruhi.T",
+    "role": "mentor"
+  },
+  {
+    "id": "Zoya.T",
+    "name": "Zoya Tilala",
+    "password": "Mentor@Zoya.2941",
     "role": "mentor"
   }
 ]
