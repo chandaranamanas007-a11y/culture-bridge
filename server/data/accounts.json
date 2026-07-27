@@ -1,8 +1,62 @@
 [
   {
     "id": "admin",
-    "password": "Interact2026",
     "name": "Super Admin",
+    "password": "Interact2026",
     "role": "admin"
+  },
+  {
+    "id": "Devansh.D",
+    "name": "Devansh Dhandha",
+    "password": "Admin@Devansh",
+    "role": "admin"
+  },
+  {
+    "id": "Ruhi.T",
+    "name": "Ruhi Thakkar",
+    "password": "Mentor@Ruhi.T",
+    "role": "mentor"
+  },
+  {
+    "id": "Zoya.T",
+    "name": "Zoya Tilala",
+    "password": "Mentor@Zoya.1",
+    "role": "mentor"
+  },
+  {
+    "id": "Taashvi.P",
+    "name": "Taashvi Pobaru",
+    "password": "Mentor@Taashvi.1",
+    "role": "mentor"
+  },
+  {
+    "id": "Krishna.V",
+    "name": "Krishna Vinda",
+    "password": "Mentor@Krishna.1",
+    "role": "mentor"
+  },
+  {
+    "id": "Manas.C",
+    "name": "Manas Chandarana",
+    "password": "Mentor@Manas.1",
+    "role": "mentor"
+  },
+  {
+    "id": "Tanishka.G",
+    "name": "Tanishka Gaglani",
+    "password": "Mentor@Tanishka.1",
+    "role": "mentor"
+  },
+  {
+    "id": "Brinda.M",
+    "name": "Brinda Meghani",
+    "password": "Mentor@Brinda.1",
+    "role": "mentor"
+  },
+  {
+    "id": "Zeal.M",
+    "name": "Zeal Maradiya",
+    "password": "Mentor@Zeal.1",
+    "role": "mentor"
   }
 ]
