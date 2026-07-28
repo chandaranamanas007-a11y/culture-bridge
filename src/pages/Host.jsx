@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { socket } from "../socket.js";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import { Copy, Check, Users, Trophy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -15,11 +15,9 @@ export default function Host() {
   const navigate = useNavigate();
   const token = localStorage.getItem("staffToken");
 
-  useEffect(() => {
-    if (!token) {
-      navigate("/login");
-    }
-  }, [token, navigate]);
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
 
   const [code, setCode] = useState(null);
   const [room, setRoom] = useState(null);

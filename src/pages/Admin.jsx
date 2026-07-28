@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { socket } from "../socket.js";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import {
   Trash2, Plus, ArrowLeft, HelpCircle, Edit2, Pencil, Check,
   X, FolderPlus, Layers, ChevronRight, LogOut
@@ -12,10 +12,6 @@ export default function Admin() {
   const token = localStorage.getItem("staffToken");
   const role = localStorage.getItem("staffRole");
   const staffName = localStorage.getItem("staffName");
-
-  useEffect(() => {
-    if (!token || role !== "admin") navigate("/login");
-  }, [token, role, navigate]);
 
   const [sets, setSets] = useState([]);
   const [activeSetId, setActiveSetId] = useState(null);
@@ -48,10 +44,14 @@ export default function Admin() {
   const activeSet = sets.find(s => s.id === activeSetId);
 
   const fetchSets = useCallback(() => {
+    if (!token) return;
     socket.emit("getQuestionSets", { token }, (res) => {
       setLoading(false);
       if (res && res.error) {
-        if (res.error.includes("Unauthorized")) { localStorage.clear(); navigate("/login"); }
+        if (res.error.includes("Unauthorized")) {
+          localStorage.clear();
+          navigate("/login");
+        }
         setError(res.error);
       } else if (res && res.sets) {
         setSets(res.sets);
@@ -60,87 +60,17 @@ export default function Admin() {
     });
   }, [token, navigate, activeSetId]);
 
-  useEffect(() => { if (token) fetchSets(); }, [token]);
-
-  const handleCreateSet = () => {
-    if (!newSetName.trim()) return;
-    socket.emit("createQuestionSet", { token, name: newSetName.trim() }, (res) => {
-      if (res && res.sets) {
-        setSets(res.sets);
-        setActiveSetId(res.sets[res.sets.length - 1].id);
-        setNewSetName("");
-        setCreatingSet(false);
-      }
-    });
-  };
-
-  const handleRenameSet = (setId) => {
-    if (!renameValue.trim()) return;
-    socket.emit("renameQuestionSet", { token, setId, name: renameValue.trim() }, (res) => {
-      if (res && res.sets) { setSets(res.sets); setRenamingSetId(null); }
-    });
-  };
-
-  const handleDeleteSet = (setId, setName) => {
-    if (!window.confirm(`Delete the set "${setName}" and all its questions? This cannot be undone.`)) return;
-    socket.emit("deleteQuestionSet", { token, setId }, (res) => {
-      if (res && res.error) { alert(res.error); return; }
-      if (res && res.sets) {
-        setSets(res.sets);
-        setActiveSetId(res.sets[0]?.id || null);
-      }
-    });
-  };
-
-  const clearForm = () => {
-    setPrompt(""); setOptionA(""); setOptionB(""); setOptionC(""); setOptionD("");
-    setCorrectIndex(0); setExplain(""); setEditIndex(null); setError("");
-  };
-
-  const handleEditClick = (index) => {
-    const q = activeSet?.questions[index];
-    if (!q) return;
-    setFormat(q.format || "Trivia"); setCountry(q.country || "Both");
-    setPrompt(q.prompt || ""); setOptionA(q.options?.[0] || "");
-    setOptionB(q.options?.[1] || ""); setOptionC(q.options?.[2] || "");
-    setOptionD(q.options?.[3] || ""); setCorrectIndex(q.correct || 0);
-    setExplain(q.explain || ""); setEditIndex(index); setError("");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleSaveQuestion = (e) => {
-    e.preventDefault();
-    setError("");
-    if (!activeSetId) { setError("Please select a question set first."); return; }
-    if (!prompt.trim() || !optionA.trim() || !optionB.trim() || !optionC.trim() || !optionD.trim() || !explain.trim()) {
-      setError("Please fill out all fields."); return;
+  useEffect(() => {
+    if (token) {
+      fetchSets();
+      socket.on("connect", fetchSets);
+      return () => socket.off("connect", fetchSets);
     }
-    const question = {
-      format, country, prompt: prompt.trim(),
-      options: [optionA.trim(), optionB.trim(), optionC.trim(), optionD.trim()],
-      correct: parseInt(correctIndex), explain: explain.trim(),
-    };
-    setSubmitting(true);
-    const event = editIndex !== null ? "editCustomQuestion" : "addCustomQuestion";
-    const payload = editIndex !== null
-      ? { token, setId: activeSetId, index: editIndex, question }
-      : { token, setId: activeSetId, question };
-    socket.emit(event, payload, (res) => {
-      setSubmitting(false);
-      if (res && res.error) { setError(res.error); return; }
-      if (res && res.sets) { setSets(res.sets); clearForm(); }
-    });
-  };
+  }, [token, fetchSets]);
 
-  const handleDeleteQuestion = (index) => {
-    if (!window.confirm("Delete this question?")) return;
-    socket.emit("deleteCustomQuestion", { token, setId: activeSetId, index }, (res) => {
-      if (res && res.error) { alert(res.error); return; }
-      if (res && res.sets) setSets(res.sets);
-    });
-  };
-
-  if (!token || role !== "admin") return null;
+  if (!token || role !== "admin") {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <div className="min-h-screen flex" style={{ background: "var(--color-surface)" }}>

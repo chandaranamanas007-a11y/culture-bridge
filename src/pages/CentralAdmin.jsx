@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { socket } from "../socket.js";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import {
   Shield,
   RefreshCw,
@@ -34,12 +34,6 @@ export default function CentralAdmin() {
   const token = localStorage.getItem("staffToken");
   const role = localStorage.getItem("staffRole");
   const name = localStorage.getItem("staffName");
-
-  useEffect(() => {
-    if (!token || role !== "admin") {
-      navigate("/login");
-    }
-  }, [token, role, navigate]);
 
   // Accounts state
   const [accounts, setAccounts] = useState([]);
@@ -99,63 +93,18 @@ export default function CentralAdmin() {
       fetchRooms();
       fetchAccounts();
       fetchHistory();
+      socket.on("connect", fetchRooms);
     }
     const interval = setInterval(fetchRooms, 10000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      socket.off("connect", fetchRooms);
+    };
   }, [token, fetchRooms, fetchAccounts, fetchHistory]);
 
-  const handleCreateAccount = (e) => {
-    e.preventDefault();
-    setAccountError("");
-    if (!newId.trim() || !newPassword.trim() || !newName.trim()) {
-      setAccountError("Please fill out all fields.");
-      return;
-    }
-    socket.emit("createAccount", { 
-      token, 
-      accountData: { id: newId.trim(), password: newPassword.trim(), name: newName.trim(), role: newRole }
-    }, (res) => {
-      if (res && res.error) {
-        setAccountError(res.error);
-      } else if (res && res.accounts) {
-        setAccounts(res.accounts);
-        setNewId("");
-        setNewPassword("");
-        setNewName("");
-      }
-    });
-  };
-
-  const handleDeleteAccount = (id) => {
-    if (!window.confirm(`Are you sure you want to delete the account '${id}'?`)) return;
-    socket.emit("deleteAccount", { token, id }, (res) => {
-      if (res && res.error) {
-        alert(res.error);
-      } else if (res && res.accounts) {
-        setAccounts(res.accounts);
-      }
-    });
-  };
-
-  const handleTerminate = (code) => {
-    if (!window.confirm(`Terminate room ${code}? All players and the host will be disconnected immediately.`)) return;
-    setTerminating(code);
-    socket.emit("terminateRoom", { token, code }, (res) => {
-      setTerminating(null);
-      if (res && res.error) {
-        alert(res.error);
-      } else {
-        setRooms((prev) => prev.filter((r) => r.code !== code));
-      }
-    });
-  };
-
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/");
-  };
-
-  if (!token || role !== "admin") return null;
+  if (!token || role !== "admin") {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <div className="min-h-screen px-6 py-10 flex flex-col items-center">
