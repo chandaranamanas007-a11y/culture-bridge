@@ -8,12 +8,12 @@
         "country": "India",
         "prompt": "Which popular sweet, shaped like small round balls, is shared across India during Diwali?",
         "options": [
-          "Ladoo",
           "Jalebi",
+          "Rasgulla",
           "Barfi",
-          "Rasgulla"
+          "Ladoo"
         ],
-        "correct": 0,
+        "correct": 1,
         "explain": "Ladoo is the most popular sweet made from flour, sugar, and ghee, gifted to friends and family during Diwali!"
       },
       {
@@ -26,7 +26,7 @@
           "Navratri",
           "Pongal"
         ],
-        "correct": 0,
+        "correct": 2,
         "explain": "During Holi, people throw vibrant coloured powders (gulal) and water at each other to welcome spring!"
       },
       {
@@ -34,12 +34,12 @@
         "country": "India",
         "prompt": "During the Uttarayan festival in Gujarat, what fills the sky in thousands of bright colours?",
         "options": [
-          "Kites",
+          "Fireworks",
           "Hot air balloons",
-          "Lanterns",
-          "Fireworks"
+          "Kites",
+          "Lanterns"
         ],
-        "correct": 0,
+        "correct": 3,
         "explain": "Uttarayan is the famous kite-flying festival where everyone goes up to their rooftops to fly colourful kites!"
       },
       {
@@ -47,9 +47,9 @@
         "country": "India",
         "prompt": "What main sweet dish made of rice, milk, and sugar/jaggery is cooked during the harvest festival of Pongal?",
         "options": [
-          "Sweet Pongal rice",
-          "Halwa",
           "Payasam",
+          "Halwa",
+          "Sweet Pongal rice",
           "Kheer"
         ],
         "correct": 0,
@@ -60,12 +60,12 @@
         "country": "India",
         "prompt": "Which delicious, spiced rice dish layered with meat or veggies is a favorite feast during Eid in India?",
         "options": [
+          "Puri",
           "Biryani",
           "Dosa",
-          "Puri",
           "Samosa"
         ],
-        "correct": 0,
+        "correct": 2,
         "explain": "Biryani is a fragrant, festive rice dish cooked with spices and herbs, enjoyed during celebrations!"
       },
       {
@@ -73,12 +73,12 @@
         "country": "India",
         "prompt": "What is the popular energetic circular group dance performed during the 9 nights of Navratri in Gujarat?",
         "options": [
-          "Garba",
           "Kathak",
+          "Salsa",
           "Bhangra",
-          "Salsa"
+          "Garba"
         ],
-        "correct": 0,
+        "correct": 1,
         "explain": "Garba is a joyful Gujarati dance where people dress in colorful clothes and dance in concentric circles!"
       },
       {
@@ -91,7 +91,7 @@
           "Torch lights",
           "Paper lanterns only"
         ],
-        "correct": 0,
+        "correct": 3,
         "explain": "Diyas (earthen oil lamps) are lit all around houses during Diwali to welcome positivity, light, and good fortune!"
       },
       {
@@ -99,10 +99,10 @@
         "country": "India",
         "prompt": "Which refreshing yogurt-based drink, served either sweet or salted, is loved all across India?",
         "options": [
-          "Lassi",
+          "Lemonade",
           "Chai",
           "Coconut water",
-          "Lemonade"
+          "Lassi"
         ],
         "correct": 0,
         "explain": "Lassi is a smooth, chilled yogurt drink that is super refreshing, especially in warm weather!"
@@ -112,12 +112,12 @@
         "country": "Mauritius",
         "prompt": "What is the most famous street food in Mauritius, made of a thin flatbread filled with yellow split peas?",
         "options": [
-          "Dholl Puri",
           "Rougaille",
+          "Tacos",
           "Biryani",
-          "Tacos"
+          "Dholl Puri"
         ],
-        "correct": 0,
+        "correct": 1,
         "explain": "Dholl Puri is Mauritius's favorite street snack — warm flatbread stuffed with ground split peas, served with tasty curries!"
       },
       {
@@ -130,7 +130,7 @@
           "Cupcake",
           "Pancake"
         ],
-        "correct": 0,
+        "correct": 3,
         "explain": "Gateau Patate is a delicious local Mauritian sweet pastry stuffed with coconut and sugar!"
       },
       {
@@ -138,8 +138,8 @@
         "country": "Mauritius",
         "prompt": "What tasty tomato-based stew with garlic and herbs is a comfort food served over rice in Mauritian homes?",
         "options": [
-          "Rougaille",
           "Dholl Puri",
+          "Rougaille",
           "Samosa",
           "Chutney"
         ],
@@ -156,7 +156,7 @@
           "Black River",
           "Pamplemousses Lake"
         ],
-        "correct": 0,
+        "correct": 2,
         "explain": "Grand Bassin is a peaceful crater lake surrounded by temples where pilgrims gather every year."
       },
       {
@@ -164,12 +164,12 @@
         "country": "Mauritius",
         "prompt": "Which annual festival in Mauritius celebrates island culture, music, Sega dance, and food?",
         "options": [
-          "Kreol Festival",
+          "Food Gala",
           "Carnival",
-          "Beach Fest",
-          "Food Gala"
+          "Kreol Festival",
+          "Beach Fest"
         ],
-        "correct": 0,
+        "correct": 3,
         "explain": "The Kreol Festival is a week of vibrant music, arts, and island celebrations loved by everyone!"
       },
       {
@@ -177,8 +177,8 @@
         "country": "Mauritius",
         "prompt": "Which colorful festival is celebrated in Mauritius with lion dances, red envelopes, and fireworks?",
         "options": [
-          "Chinese New Year",
           "Lantern Fest",
+          "Chinese New Year",
           "Dragon Boat Fest",
           "Mid-Autumn Fest"
         ],
@@ -190,12 +190,12 @@
         "country": "Mauritius",
         "prompt": "What delicious pickled fish or vegetable dish cooked with mustard seeds is a Mauritian favorite?",
         "options": [
-          "Vindaye",
           "Rougaille",
           "Curry",
+          "Vindaye",
           "Stew"
         ],
-        "correct": 0,
+        "correct": 1,
         "explain": "Vindaye is a flavorful dish seasoned with mustard, turmeric, garlic, and chilies."
       },
       {
@@ -208,7 +208,7 @@
           "Banana",
           "Orange"
         ],
-        "correct": 0,
+        "correct": 2,
         "explain": "Juicy pineapple or mango slices coated with chili and salt are popular tropical snacks sold along Mauritian beaches!"
       }
     ]
@@ -222,12 +222,12 @@
         "country": "Mauritius",
         "prompt": "How do you say a friendly \"Hello / Good morning\" in Mauritian Creole?",
         "options": [
-          "Bonzur",
-          "Bonjour",
           "Allo",
-          "Halo"
+          "Bonjour",
+          "Halo",
+          "Bonzur"
         ],
-        "correct": 0,
+        "correct": 2,
         "explain": "\"Bonzur\" is the warm everyday greeting used across Mauritius!"
       },
       {
@@ -235,10 +235,10 @@
         "country": "Mauritius",
         "prompt": "How do you say \"Thank you\" in Mauritian Creole?",
         "options": [
-          "Mersi",
+          "Padon",
           "Merci",
           "Tanpri",
-          "Padon"
+          "Mersi"
         ],
         "correct": 0,
         "explain": "\"Mersi\" is the simple way to say thank you in Creole."
@@ -253,7 +253,7 @@
           "Bonne nuit",
           "Bye"
         ],
-        "correct": 0,
+        "correct": 3,
         "explain": "\"Bonswa\" is used when greeting someone in the evening."
       },
       {
@@ -261,12 +261,12 @@
         "country": "Mauritius",
         "prompt": "What does the super common Creole phrase \"Ki manyer?\" mean when greeting a friend?",
         "options": [
-          "How are you?",
           "Where are you?",
+          "What time is it?",
           "What is your name?",
-          "What time is it?"
+          "How are you?"
         ],
-        "correct": 0,
+        "correct": 1,
         "explain": "\"Ki manyer?\" means \"How are you doing?\" or \"How's it going?\""
       },
       {
@@ -274,10 +274,10 @@
         "country": "Mauritius",
         "prompt": "How do you say \"Please\" politely in Mauritian Creole?",
         "options": [
-          "Silvouplé",
+          "Bonzur",
           "Mersi",
           "Padon",
-          "Bonzur"
+          "Silvouplé"
         ],
         "correct": 0,
         "explain": "\"Silvouplé\" is used when asking for something politely."
@@ -292,7 +292,7 @@
           "Tanpri",
           "Silvouplé"
         ],
-        "correct": 0,
+        "correct": 3,
         "explain": "\"Padon\" is used to apologize or get someone's attention."
       },
       {
@@ -305,7 +305,7 @@
           "A goodbye word",
           "A question word"
         ],
-        "correct": 0,
+        "correct": 2,
         "explain": "\"Ayo!\" is a fun, universal island expression used when surprised, shocked, or laughing!"
       },
       {
@@ -313,12 +313,12 @@
         "country": "Mauritius",
         "prompt": "How do you say \"Goodbye / See you later\" in Mauritian Creole?",
         "options": [
-          "A pli tard",
           "Bonzur",
+          "Silvouplé",
           "Mersi",
-          "Silvouplé"
+          "A pli tard"
         ],
-        "correct": 0,
+        "correct": 1,
         "explain": "\"A pli tard\" means \"See you later\" when saying goodbye!"
       },
       {
@@ -326,12 +326,12 @@
         "country": "India",
         "prompt": "How do you ask \"How are you?\" in Gujarati?",
         "options": [
-          "Kem cho?",
+          "Kese ho?",
           "Kaha ho?",
-          "Kya haal?",
-          "Kese ho?"
+          "Kem cho?",
+          "Kya haal?"
         ],
-        "correct": 0,
+        "correct": 3,
         "explain": "\"Kem cho?\" is the iconic Gujarati phrase to ask someone how they are doing!"
       },
       {
@@ -344,7 +344,7 @@
           "Badhiya",
           "Aavjo"
         ],
-        "correct": 0,
+        "correct": 2,
         "explain": "\"Maja ma!\" means \"I'm having fun / All good!\""
       },
       {
@@ -352,9 +352,9 @@
         "country": "India",
         "prompt": "What is the warm Gujarati way to say \"Goodbye\", which literally means \"Please come again\"?",
         "options": [
-          "Aavjo",
-          "Jaao",
           "Aavo",
+          "Jaao",
+          "Aavjo",
           "Kem"
         ],
         "correct": 0,
@@ -370,7 +370,7 @@
           "Kem cho bhai?",
           "Aap kon ho?"
         ],
-        "correct": 0,
+        "correct": 1,
         "explain": "\"Tamaru naam shu che?\" is how you politely ask someone's name in Gujarati."
       },
       {
@@ -378,10 +378,10 @@
         "country": "India",
         "prompt": "What is the polite Gujarati word for \"Thank you\"?",
         "options": [
-          "Dhanyavaad",
+          "Maja",
           "Shukriya",
           "Aavjo",
-          "Maja"
+          "Dhanyavaad"
         ],
         "correct": 0,
         "explain": "\"Dhanyavaad\" is used to express heartfelt gratitude."
@@ -396,7 +396,7 @@
           "Where are you?",
           "Who is it?"
         ],
-        "correct": 0,
+        "correct": 2,
         "explain": "\"Saachu che?\" is used when confirming if something is really true!"
       },
       {
@@ -409,7 +409,7 @@
           "I don't know",
           "Not okay"
         ],
-        "correct": 0,
+        "correct": 3,
         "explain": "\"Barabar che\" means \"Everything is fine / Perfect / Correct!\""
       },
       {
@@ -422,7 +422,7 @@
           "Welcome",
           "Cheers"
         ],
-        "correct": 0,
+        "correct": 1,
         "explain": "\"Namaste\" is the respectful greeting used all across India with folded hands."
       }
     ]
@@ -436,12 +436,12 @@
         "country": "India",
         "prompt": "What colorful flared skirt and blouse outfit is worn by women in Gujarat for Navratri dancing?",
         "options": [
-          "Chaniya Choli",
+          "Kimono",
           "Jeans",
-          "Gown",
-          "Kimono"
+          "Chaniya Choli",
+          "Gown"
         ],
-        "correct": 0,
+        "correct": 3,
         "explain": "Chaniya Choli is a bright, beautiful outfit decorated with mirrors and embroidery!"
       },
       {
@@ -449,12 +449,12 @@
         "country": "India",
         "prompt": "What famous tie-dye fabric featuring small dot patterns is crafted in Gujarat and Rajasthan?",
         "options": [
-          "Bandhani",
           "Denim",
+          "Linen",
           "Velvet",
-          "Linen"
+          "Bandhani"
         ],
-        "correct": 0,
+        "correct": 1,
         "explain": "Bandhani is made by tying tiny knots in fabric before dyeing it to create patterns!"
       },
       {
@@ -462,9 +462,9 @@
         "country": "India",
         "prompt": "What traditional unstitched garment, about 5 to 6 meters long, is gracefully draped by women in India?",
         "options": [
-          "Saree",
-          "Skirt",
           "Dress",
+          "Skirt",
+          "Saree",
           "Coat"
         ],
         "correct": 0,
@@ -480,7 +480,7 @@
           "Ink",
           "Clay"
         ],
-        "correct": 0,
+        "correct": 2,
         "explain": "Mehndi (Henna) leaves a rich reddish stain on skin and is a symbol of joy and celebration!"
       },
       {
@@ -493,7 +493,7 @@
           "Chili",
           "Saffron"
         ],
-        "correct": 0,
+        "correct": 1,
         "explain": "The Haldi ceremony is a fun pre-wedding ritual where family applies yellow turmeric paste to the couple!"
       },
       {
@@ -501,9 +501,9 @@
         "country": "India",
         "prompt": "What embroidered leather shoes with stylish curved toes are traditional in Gujarat & Rajasthan?",
         "options": [
-          "Mojari",
-          "Sneakers",
           "Boots",
+          "Sneakers",
+          "Mojari",
           "Sandals"
         ],
         "correct": 0,
@@ -514,12 +514,12 @@
         "country": "India",
         "prompt": "What special necklace of black and gold beads is worn by married women in Hindu tradition?",
         "options": [
-          "Mangalsutra",
+          "Locket",
           "Chain",
-          "Choker",
-          "Locket"
+          "Mangalsutra",
+          "Choker"
         ],
-        "correct": 0,
+        "correct": 3,
         "explain": "The Mangalsutra is a sacred necklace tied during the wedding ceremony symbolizing love and commitment."
       },
       {
@@ -527,12 +527,12 @@
         "country": "India",
         "prompt": "What long comfortable tunic paired with trousers is worn by both men and women across India?",
         "options": [
+          "Jacket",
           "Kurta",
           "T-shirt",
-          "Jacket",
           "Sweater"
         ],
-        "correct": 0,
+        "correct": 2,
         "explain": "The Kurta is a versatile, lightweight tunic worn for both daily wear and special occasions."
       },
       {
@@ -540,8 +540,8 @@
         "country": "Mauritius",
         "prompt": "What bright traditional headscarf is worn by Creole women in Mauritius during celebrations?",
         "options": [
-          "Mokoto",
           "Hat",
+          "Mokoto",
           "Cap",
           "Ribbon"
         ],
@@ -553,12 +553,12 @@
         "country": "Mauritius",
         "prompt": "What lively national dance of Mauritius is performed to drumbeats with rhythmic movements?",
         "options": [
+          "Breakdance",
           "Sega",
-          "Tango",
           "Waltz",
-          "Breakdance"
+          "Tango"
         ],
-        "correct": 0,
+        "correct": 3,
         "explain": "Sega is the joyful musical heartbeat of Mauritius that gets everyone dancing!"
       },
       {
@@ -566,12 +566,12 @@
         "country": "Mauritius",
         "prompt": "Which large round goatskin drum creates the main rhythmic beat for Sega music in Mauritius?",
         "options": [
-          "Ravanne",
           "Bongo",
+          "Xylophone",
           "Bass drum",
-          "Xylophone"
+          "Ravanne"
         ],
-        "correct": 0,
+        "correct": 1,
         "explain": "The Ravanne is a circular frame drum warmed over fire to tighten its skin before playing."
       },
       {
@@ -579,12 +579,12 @@
         "country": "Mauritius",
         "prompt": "What simple, peaceful color do pilgrims traditionally wear during the Maha Shivaratri walk in Mauritius?",
         "options": [
+          "Red",
           "White",
           "Black",
-          "Red",
           "Blue"
         ],
-        "correct": 0,
+        "correct": 2,
         "explain": "Pilgrims wear simple white clothes as a symbol of peace, purity, and unity."
       },
       {
@@ -597,7 +597,7 @@
           "Sand art",
           "Pottery"
         ],
-        "correct": 0,
+        "correct": 2,
         "explain": "Mauritian artisans are world-renowned for building tiny detailed sailing ships inside glass bottles!"
       },
       {
@@ -605,12 +605,12 @@
         "country": "Mauritius",
         "prompt": "What traditional outfit brought from India is worn by many Mauritian women at temple festivals?",
         "options": [
-          "Saree",
+          "Poncho",
           "Kimono",
-          "Gown",
-          "Poncho"
+          "Saree",
+          "Gown"
         ],
-        "correct": 0,
+        "correct": 3,
         "explain": "The Saree remains a cherished traditional outfit for festive and religious events in Mauritius."
       },
       {
@@ -618,9 +618,9 @@
         "country": "Mauritius",
         "prompt": "What shaker instrument made from dried sugarcane stalks and seeds is played in Sega music?",
         "options": [
-          "Maravanne",
-          "Flute",
           "Violin",
+          "Flute",
+          "Maravanne",
           "Guitar"
         ],
         "correct": 0,
@@ -631,12 +631,12 @@
         "country": "Mauritius",
         "prompt": "What fragrant tropical flower garland is often given to welcome visitors to Mauritius?",
         "options": [
-          "Frangipani flower garland",
           "Tulip garland",
+          "Rose crown",
           "Sunflower ring",
-          "Rose crown"
+          "Frangipani flower garland"
         ],
-        "correct": 0,
+        "correct": 1,
         "explain": "Fresh frangipani blossoms are used to welcome guests with tropical island warmth!"
       }
     ]
@@ -650,10 +650,10 @@
         "country": "India",
         "prompt": "In which year did India celebrate its independence from British rule?",
         "options": [
-          "1947",
+          "1968",
           "1950",
           "1920",
-          "1968"
+          "1947"
         ],
         "correct": 0,
         "explain": "India gained independence on August 15, 1947!"
@@ -668,7 +668,7 @@
           "Subhas Chandra Bose",
           "Sardar Patel"
         ],
-        "correct": 0,
+        "correct": 2,
         "explain": "Mahatma Gandhi led India's non-violent freedom movement and inspired peace movements worldwide."
       },
       {
@@ -676,12 +676,12 @@
         "country": "India",
         "prompt": "India is the birthplace of four major religions: Hinduism, Buddhism, Sikhism, and which other?",
         "options": [
-          "Jainism",
           "Taoism",
           "Shinto",
+          "Jainism",
           "Judaism"
         ],
-        "correct": 0,
+        "correct": 1,
         "explain": "Jainism, with its philosophy of non-violence and truth, originated in India."
       },
       {
@@ -689,12 +689,12 @@
         "country": "India",
         "prompt": "What famous symbol featuring four standing lions is the National Emblem of India?",
         "options": [
-          "Lion Capital of Ashoka",
+          "Sun Seal",
           "Peacock",
-          "Tiger Emblem",
-          "Sun Seal"
+          "Lion Capital of Ashoka",
+          "Tiger Emblem"
         ],
-        "correct": 0,
+        "correct": 3,
         "explain": "The Lion Capital represents strength, courage, and truth."
       },
       {
@@ -702,12 +702,12 @@
         "country": "India",
         "prompt": "How many official languages are recognized in India's Constitution?",
         "options": [
+          "50",
           "22",
-          "5",
           "10",
-          "50"
+          "5"
         ],
-        "correct": 0,
+        "correct": 3,
         "explain": "India recognizes 22 official languages, celebrating its rich linguistic diversity!"
       },
       {
@@ -715,12 +715,12 @@
         "country": "India",
         "prompt": "What symbol in the center of India's national flag represents motion, progress, and law?",
         "options": [
-          "Ashoka Chakra (24-spoke wheel)",
           "Star",
+          "Flower",
           "Crescent",
-          "Flower"
+          "Ashoka Chakra (24-spoke wheel)"
         ],
-        "correct": 0,
+        "correct": 1,
         "explain": "The navy blue Ashoka Chakra wheel has 24 spokes representing continuous progress."
       },
       {
@@ -728,8 +728,8 @@
         "country": "India",
         "prompt": "Which major city in Gujarat is home to Mahatma Gandhi's historic Sabarmati Ashram?",
         "options": [
-          "Ahmedabad",
           "Surat",
+          "Ahmedabad",
           "Rajkot",
           "Vadodara"
         ],
@@ -746,7 +746,7 @@
           "10th",
           "20th"
         ],
-        "correct": 0,
+        "correct": 2,
         "explain": "India is currently the most populous nation in the world with over 1.4 billion people!"
       },
       {
@@ -754,12 +754,12 @@
         "country": "Mauritius",
         "prompt": "Which famous unique flightless bird, now an emblem of extinction, once lived only in Mauritius?",
         "options": [
+          "Ostrich",
           "Dodo bird",
           "Penguin",
-          "Ostrich",
           "Kiwi"
         ],
-        "correct": 0,
+        "correct": 2,
         "explain": "The friendly Dodo bird lived peacefully in Mauritius before human arrivals in the 1600s."
       },
       {
@@ -767,8 +767,8 @@
         "country": "Mauritius",
         "prompt": "Which European nation first named and settled the island of Mauritius in 1598?",
         "options": [
-          "Netherlands (Dutch)",
           "Britain",
+          "Netherlands (Dutch)",
           "Spain",
           "Portugal"
         ],
@@ -780,12 +780,12 @@
         "country": "Mauritius",
         "prompt": "What historic UNESCO site in Port Louis marks where Indian workers first arrived in Mauritius?",
         "options": [
-          "Aapravasi Ghat",
+          "Le Morne",
           "Fort Adelaide",
-          "Blue Bay",
-          "Le Morne"
+          "Aapravasi Ghat",
+          "Blue Bay"
         ],
-        "correct": 0,
+        "correct": 3,
         "explain": "Aapravasi Ghat is a preserved heritage site honoring the arrival of Indian workers."
       },
       {
@@ -793,12 +793,12 @@
         "country": "Mauritius",
         "prompt": "In which year did Mauritius celebrate its independence?",
         "options": [
-          "1968",
           "1947",
           "1980",
+          "1968",
           "2000"
         ],
-        "correct": 0,
+        "correct": 1,
         "explain": "Mauritius became an independent nation on March 12, 1968!"
       },
       {
@@ -806,12 +806,12 @@
         "country": "Mauritius",
         "prompt": "What majestic mountain in Mauritius stands as a symbol of freedom and sanctuary?",
         "options": [
-          "Le Morne Brabant",
           "Mount Everest",
           "Kilimanjaro",
+          "Le Morne Brabant",
           "Fuji"
         ],
-        "correct": 0,
+        "correct": 1,
         "explain": "Le Morne Brabant is a UNESCO site that symbolises hope, freedom, and resilience."
       },
       {
@@ -824,7 +824,7 @@
           "Islam",
           "Buddhism"
         ],
-        "correct": 0,
+        "correct": 3,
         "explain": "Hinduism is practiced by nearly half of the population in Mauritius."
       },
       {
@@ -832,12 +832,12 @@
         "country": "Mauritius",
         "prompt": "Why is Mauritius lovingly nicknamed a \"Rainbow Nation\"?",
         "options": [
-          "Because of its harmonious mix of diverse cultures & traditions",
-          "Because it rains every day",
           "Because of its flag colors only",
-          "Because of colorful fish"
+          "Because it rains every day",
+          "Because of colorful fish",
+          "Because of its harmonious mix of diverse cultures & traditions"
         ],
-        "correct": 0,
+        "correct": 2,
         "explain": "Mauritius brings together Indian, African, European, and Chinese heritages in harmony!"
       },
       {
@@ -845,8 +845,8 @@
         "country": "Mauritius",
         "prompt": "Who was the first Prime Minister of independent Mauritius, known as Father of the Nation?",
         "options": [
-          "Sir Seewoosagur Ramgoolam",
           "Sir Anerood Jugnauth",
+          "Sir Seewoosagur Ramgoolam",
           "Paul Bérenger",
           "Xavier Duval"
         ],
