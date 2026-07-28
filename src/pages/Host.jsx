@@ -15,10 +15,6 @@ export default function Host() {
   const navigate = useNavigate();
   const token = localStorage.getItem("staffToken");
 
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-
   const [code, setCode] = useState(null);
   const [room, setRoom] = useState(null);
   const [creating, setCreating] = useState(false);
@@ -44,8 +40,15 @@ export default function Host() {
     };
   }, []);
 
+  // ── Auth guard (after all hooks) ───────────────
+  // NOTE: this check is done AFTER all hooks below to satisfy Rules of Hooks.
+  // The navigate call inside useEffect handles the redirect properly.
+
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      navigate("/login", { replace: true });
+      return;
+    }
 
     const doRejoin = () => {
       socket.emit("getQuestionSets", { token }, (res) => {
@@ -181,6 +184,11 @@ export default function Host() {
     }
   };
 
+  // ── Auth guard render ─────────────────────────
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
   /* ── Pre-game: create room ─────────────────── */
   if (!code) {
     const totalQs = questionSets
@@ -233,7 +241,7 @@ export default function Host() {
                           <p className={`font-semibold transition-colors ${isSelected ? "text-cream" : "text-muted group-hover:text-cream"}`}>
                             {set.name}
                           </p>
-                          <p className="text-xs text-muted/60 font-mono mt-0.5">{set.questions.length} question{set.questions.length !== 1 ? "s" : ""}</p>
+                          <p className="text-xs text-muted/60 font-mono mt-0.5">{set.questions?.length || 0} question{(set.questions?.length || 0) !== 1 ? "s" : ""}</p>
                         </div>
                       </div>
                       {isSelected && (

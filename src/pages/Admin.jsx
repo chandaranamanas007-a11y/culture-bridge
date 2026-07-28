@@ -43,6 +43,20 @@ export default function Admin() {
 
   const activeSet = sets.find(s => s.id === activeSetId);
 
+  const clearForm = useCallback(() => {
+    setEditIndex(null);
+    setFormat("Trivia");
+    setCountry("Both");
+    setPrompt("");
+    setOptionA("");
+    setOptionB("");
+    setOptionC("");
+    setOptionD("");
+    setCorrectIndex(0);
+    setExplain("");
+    setError("");
+  }, []);
+
   const fetchSets = useCallback(() => {
     if (!token) return;
     socket.emit("getQuestionSets", { token }, (res) => {
@@ -68,6 +82,123 @@ export default function Admin() {
     }
   }, [token, fetchSets]);
 
+  // ── Handler functions ──────────────────────────
+
+  const handleCreateSet = () => {
+    const name = newSetName.trim();
+    if (!name) return;
+    socket.emit("createQuestionSet", { token, name }, (res) => {
+      if (res && res.error) {
+        setError(res.error);
+      } else if (res && res.set) {
+        setSets(prev => [...prev, res.set]);
+        setActiveSetId(res.set.id);
+        setNewSetName("");
+        setCreatingSet(false);
+      }
+    });
+  };
+
+  const handleRenameSet = (setId) => {
+    const name = renameValue.trim();
+    if (!name) return;
+    socket.emit("renameQuestionSet", { token, setId, name }, (res) => {
+      if (res && res.error) {
+        setError(res.error);
+      } else {
+        setSets(prev => prev.map(s => s.id === setId ? { ...s, name } : s));
+        setRenamingSetId(null);
+      }
+    });
+  };
+
+  const handleDeleteSet = (setId, setName) => {
+    if (!window.confirm(`Delete the set "${setName}" and all its questions? This cannot be undone.`)) return;
+    socket.emit("deleteQuestionSet", { token, setId }, (res) => {
+      if (res && res.error) {
+        setError(res.error);
+      } else {
+        setSets(prev => prev.filter(s => s.id !== setId));
+        if (activeSetId === setId) setActiveSetId(null);
+      }
+    });
+  };
+
+  const handleSaveQuestion = (e) => {
+    e.preventDefault();
+    if (!prompt.trim() || !optionA.trim() || !optionB.trim() || !optionC.trim() || !optionD.trim()) {
+      setError("Please fill in the question and all four options.");
+      return;
+    }
+    if (!activeSetId) {
+      setError("No question set selected.");
+      return;
+    }
+
+    setSubmitting(true);
+    setError("");
+
+    const question = {
+      format,
+      country,
+      prompt: prompt.trim(),
+      options: [optionA.trim(), optionB.trim(), optionC.trim(), optionD.trim()],
+      correct: correctIndex,
+      explain: explain.trim(),
+    };
+
+    if (editIndex !== null) {
+      socket.emit("editQuestion", { token, setId: activeSetId, index: editIndex, question }, (res) => {
+        setSubmitting(false);
+        if (res && res.error) {
+          setError(res.error);
+        } else if (res && res.set) {
+          setSets(prev => prev.map(s => s.id === activeSetId ? res.set : s));
+          clearForm();
+        }
+      });
+    } else {
+      socket.emit("addQuestion", { token, setId: activeSetId, question }, (res) => {
+        setSubmitting(false);
+        if (res && res.error) {
+          setError(res.error);
+        } else if (res && res.set) {
+          setSets(prev => prev.map(s => s.id === activeSetId ? res.set : s));
+          clearForm();
+        }
+      });
+    }
+  };
+
+  const handleEditClick = (index) => {
+    if (!activeSet) return;
+    const q = activeSet.questions[index];
+    setEditIndex(index);
+    setFormat(q.format || "Trivia");
+    setCountry(q.country || "Both");
+    setPrompt(q.prompt || "");
+    setOptionA(q.options?.[0] || "");
+    setOptionB(q.options?.[1] || "");
+    setOptionC(q.options?.[2] || "");
+    setOptionD(q.options?.[3] || "");
+    setCorrectIndex(q.correct ?? 0);
+    setExplain(q.explain || "");
+    setError("");
+  };
+
+  const handleDeleteQuestion = (index) => {
+    if (!window.confirm("Delete this question?")) return;
+    socket.emit("deleteQuestion", { token, setId: activeSetId, index }, (res) => {
+      if (res && res.error) {
+        setError(res.error);
+      } else if (res && res.set) {
+        setSets(prev => prev.map(s => s.id === activeSetId ? res.set : s));
+        if (editIndex === index) clearForm();
+      }
+    });
+  };
+
+  // ── Auth guard (after all hooks) ───────────────
   if (!token || role !== "admin") {
     return <Navigate to="/login" replace />;
   }
@@ -313,11 +444,11 @@ export default function Admin() {
                     <HelpCircle size={22} className="text-saffron" />
                     {activeSet.name}
                   </h2>
-                  <p className="text-muted text-sm mt-1">{activeSet.questions.length} question{activeSet.questions.length !== 1 ? "s" : ""} in this set</p>
+                  <p className="text-muted text-sm mt-1">{activeSet.questions?.length || 0} question{(activeSet.questions?.length || 0) !== 1 ? "s" : ""} in this set</p>
                 </div>
               </div>
 
-              {activeSet.questions.length === 0 ? (
+              {(activeSet.questions?.length || 0) === 0 ? (
                 <div className="flex flex-col items-center justify-center py-24 text-center border-2 border-dashed border-white/8 rounded-3xl">
                   <div className="w-16 h-16 bg-surface2 rounded-2xl mx-auto mb-4 flex items-center justify-center border border-white/8">
                     <HelpCircle size={28} className="text-muted/40" />
@@ -358,7 +489,7 @@ export default function Admin() {
                           <p className="font-semibold text-cream leading-snug mb-4">{q.prompt}</p>
 
                           <div className="grid grid-cols-2 gap-2 mb-4">
-                            {q.options.map((opt, oi) => (
+                            {(q.options || []).map((opt, oi) => (
                               <div key={oi} className={`px-3 py-2 rounded-xl text-xs flex items-center gap-2 border ${
                                 oi === q.correct
                                   ? "bg-green-500/10 border-green-500/30 text-green-400"

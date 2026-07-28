@@ -51,7 +51,6 @@ export default function CentralAdmin() {
 
   // History state
   const [history, setHistory] = useState([]);
-  const [selectedHistoryGame, setSelectedHistoryGame] = useState(null);
 
   const fetchRooms = useCallback(() => {
     if (!token) return;
@@ -102,6 +101,63 @@ export default function CentralAdmin() {
     };
   }, [token, fetchRooms, fetchAccounts, fetchHistory]);
 
+  // ── Handler functions ──────────────────────────
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/");
+  };
+
+  const handleCreateAccount = (e) => {
+    e.preventDefault();
+    setAccountError("");
+    const id = newId.trim();
+    const password = newPassword.trim();
+    const displayName = newName.trim();
+
+    if (!id || !password || !displayName) {
+      setAccountError("Please fill in all fields.");
+      return;
+    }
+
+    socket.emit("createAccount", { token, id, password, name: displayName, role: newRole }, (res) => {
+      if (res && res.error) {
+        setAccountError(res.error);
+      } else {
+        setNewId("");
+        setNewPassword("");
+        setNewName("");
+        setNewRole("mentor");
+        fetchAccounts();
+      }
+    });
+  };
+
+  const handleDeleteAccount = (accountId) => {
+    if (!window.confirm(`Delete account "${accountId}"? This cannot be undone.`)) return;
+    socket.emit("deleteAccount", { token, id: accountId }, (res) => {
+      if (res && res.error) {
+        alert(`Error: ${res.error}`);
+      } else {
+        fetchAccounts();
+      }
+    });
+  };
+
+  const handleTerminate = (roomCode) => {
+    if (!window.confirm(`Terminate room ${roomCode}? All players will be disconnected.`)) return;
+    setTerminating(roomCode);
+    socket.emit("terminateRoom", { token, code: roomCode }, (res) => {
+      setTerminating(null);
+      if (res && res.error) {
+        alert(`Error: ${res.error}`);
+      } else {
+        fetchRooms();
+      }
+    });
+  };
+
+  // ── Auth guard (after all hooks) ───────────────
   if (!token || role !== "admin") {
     return <Navigate to="/login" replace />;
   }
@@ -168,7 +224,7 @@ export default function CentralAdmin() {
             </div>
             <div>
               <h3 className="font-display text-xl font-semibold text-cream">
-                Quiz History & Saved Scores
+                Quiz History &amp; Saved Scores
               </h3>
               <p className="text-muted text-sm mt-2">
                 All participant scores and quiz leaderboards are automatically saved on the server.
@@ -205,33 +261,37 @@ export default function CentralAdmin() {
                     Accounts
                   </h2>
                   <p className="text-muted text-sm">
-                    Manage Staff (Admins & Mentors)
+                    Manage Staff (Admins &amp; Mentors)
                   </p>
                 </div>
               </div>
 
               {/* Account List */}
               <div className="flex flex-col gap-3 mb-8 max-h-[300px] overflow-y-auto pr-1">
-                {accounts.map(acc => (
-                  <div key={acc.id} className="bg-surface2 p-4 rounded-xl border border-white/5 flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-cream">{acc.name}</span>
-                        <span className={`text-[10px] font-mono tracking-widest uppercase px-2 py-0.5 rounded-md border ${
-                          acc.role === "admin" ? "bg-saffron/10 text-saffron border-saffron/20" : "bg-lagoon/10 text-lagoon border-lagoon/20"
-                        }`}>
-                          {acc.role}
-                        </span>
+                {accounts.length === 0 ? (
+                  <p className="text-muted/60 text-sm text-center py-4">No accounts found.</p>
+                ) : (
+                  accounts.map(acc => (
+                    <div key={acc.id} className="bg-surface2 p-4 rounded-xl border border-white/5 flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-cream">{acc.name}</span>
+                          <span className={`text-[10px] font-mono tracking-widest uppercase px-2 py-0.5 rounded-md border ${
+                            acc.role === "admin" ? "bg-saffron/10 text-saffron border-saffron/20" : "bg-lagoon/10 text-lagoon border-lagoon/20"
+                          }`}>
+                            {acc.role}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted font-mono mt-1">ID: {acc.id}</p>
                       </div>
-                      <p className="text-xs text-muted font-mono mt-1">ID: {acc.id}</p>
+                      {acc.id !== "admin" && (
+                        <button onClick={() => handleDeleteAccount(acc.id)} className="p-2 text-muted hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
-                    {acc.id !== "admin" && (
-                      <button onClick={() => handleDeleteAccount(acc.id)} className="p-2 text-muted hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
-                        <Trash2 size={16} />
-                      </button>
-                    )}
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
 
               {/* Add Account Form */}
@@ -239,12 +299,12 @@ export default function CentralAdmin() {
                 <h3 className="text-sm font-bold text-cream mb-4 flex items-center gap-2"><UserPlus size={16}/> Create Account</h3>
                 <form onSubmit={handleCreateAccount} className="flex flex-col gap-3">
                   <div className="flex gap-3">
-                    <input type="text" value={newId} onChange={e => setNewId(e.target.value)} placeholder="Login ID (e.g. mentor1)" className="flex-1 bg-surface border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-lagoon outline-none" />
-                    <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Password" className="flex-1 bg-surface border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-lagoon outline-none" />
+                    <input type="text" value={newId} onChange={e => setNewId(e.target.value)} placeholder="Login ID (e.g. mentor1)" className="flex-1 bg-surface border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-lagoon outline-none text-cream" />
+                    <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Password" className="flex-1 bg-surface border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-lagoon outline-none text-cream" />
                   </div>
                   <div className="flex gap-3">
-                    <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Display Name" className="flex-[2] bg-surface border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-lagoon outline-none" />
-                    <select value={newRole} onChange={e => setNewRole(e.target.value)} className="flex-1 bg-surface border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-lagoon outline-none cursor-pointer">
+                    <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Display Name" className="flex-[2] bg-surface border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-lagoon outline-none text-cream" />
+                    <select value={newRole} onChange={e => setNewRole(e.target.value)} className="flex-1 bg-surface border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-lagoon outline-none cursor-pointer text-cream">
                       <option value="mentor">Mentor</option>
                       <option value="admin">Admin</option>
                     </select>
@@ -276,7 +336,7 @@ export default function CentralAdmin() {
                       Live Rooms
                     </h2>
                     <p className="text-muted text-sm">
-                      Monitor active games
+                      {lastRefreshed ? `Updated ${timeAgo(lastRefreshed)}` : "Monitor active games"}
                     </p>
                   </div>
                 </div>
@@ -336,7 +396,7 @@ export default function CentralAdmin() {
                         <button
                           onClick={() => handleTerminate(room.code)}
                           disabled={terminating === room.code}
-                          className="absolute bottom-4 right-4 p-2 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white transition-colors"
+                          className="absolute bottom-4 right-4 p-2 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white transition-colors disabled:opacity-50"
                           title="Terminate Room"
                         >
                           <Trash2 size={14} />
