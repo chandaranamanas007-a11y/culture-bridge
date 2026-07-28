@@ -312,14 +312,16 @@ io.on('connection', (socket) => {
     callback({ accounts: accounts.map(a => ({ id: a.id, name: a.name, role: a.role })) });
   });
 
-  socket.on('createAccount', ({ token, accountData }, callback) => {
+  socket.on('createAccount', ({ token, id, password, name: displayName, role: newRole }, callback) => {
     const user = sessions[token];
     if (!user || user.role !== 'admin') { callback({ error: 'Unauthorized. Admin access required.' }); return; }
-    if (accounts.some(a => a.id === accountData.id)) { callback({ error: 'An account with this ID already exists.' }); return; }
-    accounts.push(accountData);
+    if (!id || !password || !displayName) { callback({ error: 'ID, password and display name are required.' }); return; }
+    if (accounts.some(a => a.id === id)) { callback({ error: 'An account with this ID already exists.' }); return; }
+    const newAccount = { id, password, name: displayName, role: newRole || 'mentor' };
+    accounts.push(newAccount);
     saveAccounts();
     callback({ success: true, accounts: accounts.map(a => ({ id: a.id, name: a.name, role: a.role })) });
-    console.log(`✓ Account ${accountData.id} created by admin`);
+    console.log(`✓ Account ${id} created by admin`);
   });
 
   socket.on('deleteAccount', ({ token, id }, callback) => {
@@ -534,7 +536,8 @@ io.on('connection', (socket) => {
     const newSet = { id: makeSetId(), name: name || 'Untitled Set', questions: [] };
     questionSets.push(newSet);
     saveQuestionSets();
-    callback({ success: true, sets: questionSets });
+    // Return the new set object so the frontend can set it as active immediately
+    callback({ success: true, set: newSet, sets: questionSets });
     console.log(`✓ Question set created: ${newSet.name}`);
   });
 
@@ -558,34 +561,41 @@ io.on('connection', (socket) => {
     console.log(`🗑 Question set deleted: ${setId}`);
   });
 
-  socket.on('addCustomQuestion', ({ token, setId, question }, callback) => {
+  // addQuestion (frontend) → was incorrectly named addCustomQuestion on server
+  socket.on('addQuestion', ({ token, setId, question }, callback) => {
     const user = sessions[token];
     if (!user || user.role !== 'admin') { callback({ error: 'Unauthorized. Admin access required.' }); return; }
     const set = questionSets.find(s => s.id === setId);
     if (!set) { callback({ error: 'Set not found.' }); return; }
     set.questions.push(question);
     saveQuestionSets();
-    callback({ success: true, sets: questionSets });
+    // Return the updated set so the frontend can update its local state
+    callback({ success: true, set, sets: questionSets });
+    console.log(`✓ Question added to set "${set.name}" (now ${set.questions.length} questions)`);
   });
 
-  socket.on('editCustomQuestion', ({ token, setId, index, question }, callback) => {
+  // editQuestion (frontend) → was incorrectly named editCustomQuestion on server
+  socket.on('editQuestion', ({ token, setId, index, question }, callback) => {
     const user = sessions[token];
     if (!user || user.role !== 'admin') { callback({ error: 'Unauthorized. Admin access required.' }); return; }
     const set = questionSets.find(s => s.id === setId);
     if (!set || set.questions[index] === undefined) { callback({ error: 'Question not found.' }); return; }
     set.questions[index] = question;
     saveQuestionSets();
-    callback({ success: true, sets: questionSets });
+    callback({ success: true, set, sets: questionSets });
+    console.log(`✓ Question #${index + 1} edited in set "${set.name}"`);
   });
 
-  socket.on('deleteCustomQuestion', ({ token, setId, index }, callback) => {
+  // deleteQuestion (frontend) → was incorrectly named deleteCustomQuestion on server
+  socket.on('deleteQuestion', ({ token, setId, index }, callback) => {
     const user = sessions[token];
     if (!user || user.role !== 'admin') { callback({ error: 'Unauthorized. Admin access required.' }); return; }
     const set = questionSets.find(s => s.id === setId);
     if (!set || set.questions[index] === undefined) { callback({ error: 'Question not found.' }); return; }
     set.questions.splice(index, 1);
     saveQuestionSets();
-    callback({ success: true, sets: questionSets });
+    callback({ success: true, set, sets: questionSets });
+    console.log(`🗑 Question #${index + 1} deleted from set "${set.name}" (${set.questions.length} remaining)`);
   });
 
   /* ── ADMIN: Active Rooms ── */

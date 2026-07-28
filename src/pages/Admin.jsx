@@ -91,8 +91,16 @@ export default function Admin() {
       if (res && res.error) {
         setError(res.error);
       } else if (res && res.set) {
+        // Server returns the new set object directly — add it and activate it
         setSets(prev => [...prev, res.set]);
         setActiveSetId(res.set.id);
+        setNewSetName("");
+        setCreatingSet(false);
+      } else if (res && res.sets) {
+        // Fallback: use full sets list
+        setSets(res.sets);
+        const newest = res.sets[res.sets.length - 1];
+        if (newest) setActiveSetId(newest.id);
         setNewSetName("");
         setCreatingSet(false);
       }
