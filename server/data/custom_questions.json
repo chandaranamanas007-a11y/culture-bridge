@@ -1,6 +1,6 @@
 [
   {
-    "id": "set_festival_food",
+    "id": "set_41vpr0qd",
     "name": "Festivals & Food",
     "questions": [
       {
@@ -214,7 +214,7 @@
     ]
   },
   {
-    "id": "set_languages",
+    "id": "set_y4p4t19f",
     "name": "Languages",
     "questions": [
       {
@@ -428,7 +428,7 @@
     ]
   },
   {
-    "id": "set_clothing_traditions",
+    "id": "set_zleqvyxn",
     "name": "Clothing & Traditions",
     "questions": [
       {
@@ -638,6 +638,220 @@
           "Dashiki"
         ],
         "prompt": "What is the name of the traditional Mauritian Creole women's dress characterised by floral prints and lace trim?"
+      }
+    ]
+  },
+  {
+    "id": "set_history_society",
+    "name": "History & Society",
+    "questions": [
+      {
+        "format": "Trivia",
+        "country": "India",
+        "prompt": "In which year did India gain independence from British colonial rule?",
+        "options": [
+          "1947",
+          "1950",
+          "1942",
+          "1930"
+        ],
+        "correct": 0,
+        "explain": "India achieved independence from the British Raj on 15 August 1947 following a decades-long freedom movement."
+      },
+      {
+        "format": "Trivia",
+        "country": "India",
+        "prompt": "Which four major world religions originated in the Indian subcontinent?",
+        "options": [
+          "Hinduism, Buddhism, Jainism & Sikhism",
+          "Hinduism, Islam, Christianity & Sikhism",
+          "Buddhism, Taoism, Shinto & Hinduism",
+          "Sikhism, Zoroastrianism, Judaism & Jainism"
+        ],
+        "correct": 0,
+        "explain": "India is the birthplace of four major world religions: Hinduism, Buddhism, Jainism, and Sikhism."
+      },
+      {
+        "format": "Trivia",
+        "country": "India",
+        "prompt": "Which historic 1930 protest march led by Mahatma Gandhi challenged the British colonial monopoly on a daily staple?",
+        "options": [
+          "Salt March (Dandi March)",
+          "Quit India Movement",
+          "Non-Cooperation Movement",
+          "Swadeshi Movement"
+        ],
+        "correct": 0,
+        "explain": "The 240-mile Salt March from Sabarmati to Dandi in 1930 sparked widespread civil disobedience against the British salt tax."
+      },
+      {
+        "format": "Trivia",
+        "country": "India",
+        "prompt": "How many official languages are recognized in the Eighth Schedule of the Constitution of India?",
+        "options": [
+          "22",
+          "14",
+          "28",
+          "18"
+        ],
+        "correct": 0,
+        "explain": "The Indian Constitution recognizes 22 official languages, reflecting the country’s vast linguistic diversity."
+      },
+      {
+        "format": "Trivia",
+        "country": "India",
+        "prompt": "Which ancient philosophical concept of non-violence guided India’s struggle for freedom under Mahatma Gandhi?",
+        "options": [
+          "Ahimsa",
+          "Satyagraha",
+          "Dharma",
+          "Karma"
+        ],
+        "correct": 0,
+        "explain": "Ahimsa (non-violence to all living beings) was the core spiritual and political philosophy behind India’s independence movement."
+      },
+      {
+        "format": "Trivia",
+        "country": "India",
+        "prompt": "Which iconic Mumbai monument commemorated the 1911 royal visit and later saw the last British troops depart India in 1948?",
+        "options": [
+          "Gateway of India",
+          "India Gate",
+          "Victoria Memorial",
+          "Red Fort"
+        ],
+        "correct": 0,
+        "explain": "The Gateway of India in Mumbai marked both the arrival of King George V in 1911 and the formal departure of the last British regiment (First Battalion, Somerset Light Infantry) in February 1948."
+      },
+      {
+        "format": "Trivia",
+        "country": "India",
+        "prompt": "What is the national motto of India, inscribed in Devanagari script at the base of the Lion Capital of Ashoka?",
+        "options": [
+          "Satyameva Jayate (Truth Alone Triumphs)",
+          "Vande Mataram",
+          "Jai Hind",
+          "Vasudhaiva Kutumbakam"
+        ],
+        "correct": 0,
+        "explain": "\"Satyameva Jayate\" (\"Truth Alone Triumphs\") is taken from the ancient Mundaka Upanishad and serves as India’s national motto."
+      },
+      {
+        "format": "Trivia",
+        "country": "India",
+        "prompt": "What major demographic milestone did India reach, making it the most populous nation in the world?",
+        "options": [
+          "Over 1.4 billion people",
+          "Over 800 million people",
+          "Over 2 billion people",
+          "Over 900 million people"
+        ],
+        "correct": 0,
+        "explain": "India is home to over 1.4 billion people, featuring rich ethnic, regional, and linguistic diversity."
+      },
+      {
+        "format": "Trivia",
+        "country": "Mauritius",
+        "prompt": "Who were the first Europeans to name and attempt settlement of Mauritius in 1598?",
+        "options": [
+          "Dutch",
+          "French",
+          "British",
+          "Portuguese"
+        ],
+        "correct": 0,
+        "explain": "The Dutch claimed the uninhabited island in 1598, naming it \"Mauritius\" after Prince Maurice of Nassau, and introduced sugar cane."
+      },
+      {
+        "format": "Trivia",
+        "country": "Mauritius",
+        "prompt": "Which UNESCO World Heritage site in Port Louis marks the landing place of nearly half a million Indian indentured labourers from 1834 to 1920?",
+        "options": [
+          "Aapravasi Ghat",
+          "Le Morne Brabant",
+          "Eureka House",
+          "Fort Adelaide"
+        ],
+        "correct": 0,
+        "explain": "Aapravasi Ghat is the historic immigration depot where over 460,000 Indian indentured workers arrived to work on sugar plantations, shaping modern Mauritian society."
+      },
+      {
+        "format": "Trivia",
+        "country": "Mauritius",
+        "prompt": "In which year did Mauritius gain independence from British colonial rule?",
+        "options": [
+          "1968",
+          "1947",
+          "1975",
+          "1958"
+        ],
+        "correct": 0,
+        "explain": "Mauritius achieved independence on 12 March 1968 under its founding Prime Minister, Sir Seewoosagur Ramgoolam."
+      },
+      {
+        "format": "Trivia",
+        "country": "Mauritius",
+        "prompt": "Demographically, which religious group forms the largest proportion (~48%) of the population in Mauritius?",
+        "options": [
+          "Hinduism",
+          "Christianity",
+          "Islam",
+          "Buddhism"
+        ],
+        "correct": 0,
+        "explain": "Mauritius is the only country in Africa where Hinduism is the largest religion, practiced by nearly half the population due to Indian ancestral heritage."
+      },
+      {
+        "format": "Trivia",
+        "country": "Mauritius",
+        "prompt": "Which mountain symbolises the struggle for freedom and resistance by runaway enslaved people in Mauritian history?",
+        "options": [
+          "Le Morne Brabant",
+          "Pieter Both",
+          "Le Pouce",
+          "Corps de Garde"
+        ],
+        "correct": 0,
+        "explain": "Le Morne Brabant, a UNESCO World Heritage site, served as a sanctuary for runaway slaves (maroons) in the 18th and early 19th centuries."
+      },
+      {
+        "format": "Trivia",
+        "country": "Mauritius",
+        "prompt": "Following the Treaty of Paris in 1814, what did the British allow Mauritians to preserve despite British rule?",
+        "options": [
+          "French language, Napoleonic law, and customs",
+          "Dutch governance",
+          "Sole use of English in all courts",
+          "Monarchy rule"
+        ],
+        "correct": 0,
+        "explain": "When Britain took control from France in 1810, the capitulation treaty preserved French language, Napoleonic Civil Code laws, and customs for the islanders."
+      },
+      {
+        "format": "Trivia",
+        "country": "Mauritius",
+        "prompt": "Mauritius is celebrated as a \"Rainbow Nation\". Which four primary ethnic groups comprise its peaceful multicultural society?",
+        "options": [
+          "Indo-Mauritians, Creoles, Sino-Mauritians & Franco-Mauritians",
+          "Anglo-Saxons, Berbers, Zulu & Dutch",
+          "Tamils, Gujaratis, Punjabis & Marathis only",
+          "Malay, Arab, Swahili & Portuguese"
+        ],
+        "correct": 0,
+        "explain": "Mauritian society is composed of Indo-Mauritians (Indian descent), Creoles (African/Malagasy descent), Sino-Mauritians (Chinese descent), and Franco-Mauritians (French descent)."
+      },
+      {
+        "format": "Trivia",
+        "country": "Mauritius",
+        "prompt": "Who is widely regarded as the \"Father of the Mauritian Nation\" for leading the country to independence in 1968?",
+        "options": [
+          "Sir Seewoosagur Ramgoolam",
+          "Sir Anerood Jugnauth",
+          "Emmanuel Anquetil",
+          "Dr. Maurice Curé"
+        ],
+        "correct": 0,
+        "explain": "Sir Seewoosagur Ramgoolam led Mauritius to independence in 1968 and served as its first Prime Minister."
       }
     ]
   }
