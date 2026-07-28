@@ -97,32 +97,40 @@ export default function Play() {
     if (room?.status === "reveal" && prevStatusRef.current === "question") {
       const q = room.questions?.[room.currentQuestion];
       if (answeredIndex === q?.correct) {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ["#2FBFAE", "#F2A93B", "#FFFFFF"]
-        });
+        try {
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ["#2FBFAE", "#F2A93B", "#FFFFFF"]
+          });
+        } catch (e) {
+          console.error("Confetti error:", e);
+        }
       }
     } else if (room?.status === "ended" && prevStatusRef.current !== "ended") {
       // Big confetti for end
       const duration = 3000;
       const end = Date.now() + duration;
       const frame = () => {
-        confetti({
-          particleCount: 5,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 },
-          colors: ["#2FBFAE", "#F2A93B"]
-        });
-        confetti({
-          particleCount: 5,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 },
-          colors: ["#2FBFAE", "#F2A93B"]
-        });
+        try {
+          confetti({
+            particleCount: 5,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: ["#2FBFAE", "#F2A93B"]
+          });
+          confetti({
+            particleCount: 5,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: ["#2FBFAE", "#F2A93B"]
+          });
+        } catch (e) {
+          console.error("Confetti frame error:", e);
+        }
         if (Date.now() < end) requestAnimationFrame(frame);
       };
       frame();

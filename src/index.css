@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-night: #10122B;
+  --color-surface: #191B3A;
+  --color-surface2: #22254A;
+  --color-saffron: #F2A93B;
+  --color-saffron2: #E08B1D;
+  --color-lagoon: #2FBFAE;
+  --color-lagoon2: #1E8F82;
+  --color-cream: #F5F1E8;
+  --color-muted: #8B8FB8;
+}
+
 html, body, #root {
   height: 100%;
 }

@@ -160,7 +160,7 @@ export default function Admin() {
                         <ChevronRight size={14} className={`flex-shrink-0 transition-transform ${activeSetId === set.id ? "text-lagoon rotate-90" : "text-muted/40"}`} />
                         <div className="min-w-0">
                           <p className="font-medium text-sm truncate">{set.name}</p>
-                          <p className="text-[11px] text-muted/60 font-mono">{set.questions.length} questions</p>
+                          <p className="text-[11px] text-muted/60 font-mono">{(set.questions?.length || 0)} questions</p>
                         </div>
                       </div>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">

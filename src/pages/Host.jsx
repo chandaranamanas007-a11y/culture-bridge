@@ -185,7 +185,7 @@ export default function Host() {
   if (!code) {
     const totalQs = questionSets
       .filter(s => selectedSetIds.includes(s.id))
-      .reduce((sum, s) => sum + s.questions.length, 0);
+      .reduce((sum, s) => sum + (s.questions?.length || 0), 0);
 
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center">
