@@ -2,13 +2,7 @@
   {
     "id": "admin",
     "name": "Super Admin",
-    "password": "Interact2026",
-    "role": "admin"
-  },
-  {
-    "id": "Devansh.D",
-    "name": "Devansh Dhandha",
-    "password": "Admin@Devansh",
+    "password": "SuperAdmin@2026!Bridge",
     "role": "admin"
   },
   {
@@ -21,12 +15,6 @@
     "id": "Krishna.V",
     "name": "Krishna Vinda",
     "password": "Mentor@Krishna.4721",
-    "role": "mentor"
-  },
-  {
-    "id": "Manas.C",
-    "name": "Manas Chandarana",
-    "password": "Mentor@Manas.9154",
     "role": "mentor"
   },
   {
@@ -48,15 +36,27 @@
     "role": "mentor"
   },
   {
+    "id": "Zoya.T",
+    "name": "Zoya Tilala",
+    "password": "Mentor@Zoya.2941",
+    "role": "mentor"
+  },
+  {
     "id": "Ruhi.T",
     "name": "Ruhi Thakkar",
     "password": "Mentor@Ruhi.T",
     "role": "mentor"
   },
   {
-    "id": "Zoya.T",
-    "name": "Zoya Tilala",
-    "password": "Mentor@Zoya.2941",
-    "role": "mentor"
+    "id": "Devansh.D",
+    "name": "Devansh Dhandha",
+    "password": "Admin@Devansh",
+    "role": "admin"
+  },
+  {
+    "id": "Siddharth.S",
+    "name": "Siddharth Soneji",
+    "password": "Admin@Siddharth.1682",
+    "role": "admin"
   }
 ]
